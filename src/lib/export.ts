@@ -42,7 +42,7 @@ function downloadPDF(filename: string, htmlContent: string) {
 // ── DOCX export (using docx npm package loaded via CDN) ───────────────────────
 async function downloadDOCX(filename: string, buildFn: () => Promise<Uint8Array>) {
   const bytes = await buildFn()
-  const blob = new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' })
+  const blob = new Blob([bytes as any], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url; a.download = filename + '.docx'; a.click()
