@@ -93,7 +93,7 @@ Generate a complete topical authority map with 3 pillars × 3 clusters each, plu
     const pillar_pages = pillars.map(p => {
       const clusters = (p.clusters ?? []).slice(0, 3)
       totalTopics += 1 + clusters.length
-      const pcov = p.covered ?? (urls as string[]).some(u => u.toLowerCase().includes(p.slug.split('-')[0]))
+      const pcov = (urls as string[]).some(u => u.toLowerCase().includes(p.slug.split('-')[0]))
       if (pcov) coveredCount++
       clusters.forEach(c => { if (c.covered) coveredCount++ })
       return {
