@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand: #2563eb;
+  --brand-dark: #1d4ed8;
+  --amber: #d97706;
+}
+
+@layer base {
+  * { box-sizing: border-box; }
+  body { font-family: var(--font-sans), system-ui, sans-serif; }
+}
+
+@layer utilities {
+  .animate-spin-slow { animation: spin 1s linear infinite; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-up { animation: fade-up 0.35s cubic-bezier(0.16,1,0.3,1) both; }
