@@ -4,13 +4,17 @@ import { WelcomeEmail } from '@/emails/welcome'
 import { SubscriptionEmail } from '@/emails/subscription'
 import { CancelledEmail } from '@/emails/cancelled'
 
-const resend = new Resend(process.env.RESEND_API_KEY!)
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 const FROM = process.env.EMAIL_FROM ?? 'SemanticToolz <hello@semantictoolz.com>'
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://semantictoolz.com'
 
 // ── Welcome ───────────────────────────────────────────────────────────────────
 export async function sendWelcomeEmail(to: string, firstName?: string) {
   try {
+    if (!resend) {
+      console.log(`[Email] Resend not configured, skipping welcome email to ${to}`)
+      return
+    }
     const html = await render(
       WelcomeEmail({ firstName, dashboardUrl: `${APP_URL}/dashboard` })
     )
@@ -35,6 +39,10 @@ export async function sendSubscriptionEmail(
   nextBillingDate?: string
 ) {
   try {
+  if (!resend) {
+      console.log(`[Email] Resend not configured, skipping welcome email to ${to}`)
+      return
+    }
     const html = await render(
       SubscriptionEmail({
         firstName,
@@ -64,6 +72,10 @@ export async function sendCancelledEmail(
   accessUntil?: string
 ) {
   try {
+  if (!resend) {
+      console.log(`[Email] Resend not configured, skipping welcome email to ${to}`)
+      return
+    }
     const html = await render(
       CancelledEmail({
         firstName,
