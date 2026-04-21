@@ -14,6 +14,7 @@ function lsHeaders(): Record<string, string> {
   }
   return headers
 }
+
 // Map LS variant IDs → Plan
 function buildVariantMap(): Record<string, Plan> {
   return {
@@ -38,6 +39,10 @@ export async function createCheckout(
   email: string,
   appUrl: string
 ): Promise<string> {
+  if (!process.env.LEMONSQUEEZY_API_KEY) {
+    throw new Error('Lemon Squeezy API key not configured')
+  }
+  
   const res = await fetch(`${LS_API}/checkouts`, {
     method: 'POST',
     headers: lsHeaders(),
@@ -77,7 +82,10 @@ export async function createCheckout(
  * Verify Lemon Squeezy webhook HMAC signature
  */
 export function verifyWebhookSignature(payload: string, signature: string): boolean {
-  const secret = process.env.LEMONSQUEEZY_WEBHOOK_SECRET!
+  if (!process.env.LEMONSQUEEZY_WEBHOOK_SECRET) {
+    return false
+  }
+  const secret = process.env.LEMONSQUEEZY_WEBHOOK_SECRET
   const hmac   = crypto.createHmac('sha256', secret)
   const digest = hmac.update(payload).digest('hex')
   try {
