@@ -5,13 +5,18 @@ import { Plan } from '@prisma/client'
 const LS_API = 'https://api.lemonsqueezy.com/v1'
 
 function lsHeaders() {
+  if (!process.env.LEMONSQUEEZY_API_KEY) {
+    return {
+      'Content-Type': 'application/vnd.api+json',
+      Accept: 'application/vnd.api+json',
+    }
+  }
   return {
     'Content-Type': 'application/vnd.api+json',
     Accept: 'application/vnd.api+json',
     Authorization: `Bearer ${process.env.LEMONSQUEEZY_API_KEY}`,
   }
 }
-
 // Map LS variant IDs → Plan
 function buildVariantMap(): Record<string, Plan> {
   return {
