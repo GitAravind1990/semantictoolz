@@ -20,7 +20,7 @@ const TOOL_META: Record<string, { label: string; icon: string }> = {
   eeat:                { label: 'E-E-A-T',                      icon: '🏆' },
   backlinks:           { label: 'Relevant Backlinks',           icon: '🔗' },
   rewrite:             { label: 'AI Rewrite',                   icon: '✍️' },
-  fixer:               { label: 'Issue Fixer',                  icon: 'ðŸ”§' },
+  fixer:               { label: 'Issue Fixer',                  icon: '🔧' },
   citation:            { label: 'Citation Plan',                icon: '📎' },
   gap:                 { label: 'Content Gap',                  icon: '🕳️' },
   queries:             { label: 'AI Queries',                   icon: '🔎' },
