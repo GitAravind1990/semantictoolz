@@ -1,5 +1,8 @@
 {
   "functions": {
+    "src/app/api/fixer/route.ts": {
+      "maxDuration": 60
+    },
     "src/app/api/rewrite/route.ts": {
       "maxDuration": 60
     },

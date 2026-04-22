@@ -53,7 +53,7 @@ ${content.slice(0, 4000)}
 
 Rewrite the content to fix every issue listed above. Keep facts intact. Return JSON only.`
 
-    const raw = await callClaude(SYSTEM, prompt, 5000, 'claude-sonnet-4-6')
+    const raw = await callClaude(SYSTEM, prompt, 4000, 'claude-haiku-4-5-20251001')
     const result = extractJSON(raw)
 
     return apiSuccess({ ...result, userPlan: user.plan, mode: mode || 'auto', original_content: content })
