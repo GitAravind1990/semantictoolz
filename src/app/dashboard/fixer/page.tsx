@@ -1,6 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { useContent } from '@/context/ContentContext'
 
 type Issue = {
   issue: string
@@ -18,6 +20,7 @@ type FixerResult = {
 }
 
 export default function FixerPage() {
+  const { content: sharedContent, analysisResult } = useContent()
   const [content, setContent] = useState('')
   const [issues, setIssues] = useState<Issue[]>([])
   const [selectedIssues, setSelectedIssues] = useState<Set<number>>(new Set())
@@ -25,6 +28,17 @@ export default function FixerPage() {
   const [loading, setLoading] = useState<'idle' | 'analysing' | 'fixing'>('idle')
   const [error, setError] = useState<string | null>(null)
   const [step, setStep] = useState<1 | 2 | 3>(1)
+
+  // Auto-load content + issues from the Scores tab if available
+  useEffect(() => {
+    if (sharedContent) setContent(sharedContent)
+    if (analysisResult?.top_issues?.length) {
+      const found = analysisResult.top_issues as Issue[]
+      setIssues(found)
+      setSelectedIssues(new Set(found.map((_, i) => i)))
+      if (sharedContent) setStep(2)
+    }
+  }, [sharedContent, analysisResult])
 
   async function handleAnalyse() {
     if (content.length < 50) {
@@ -106,161 +120,188 @@ export default function FixerPage() {
     setError(null)
   }
 
+  const hasSharedData = !!(sharedContent && analysisResult?.top_issues?.length)
+
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <div className="flex items-center gap-3 mb-6">
-        <span className="text-3xl">🔧</span>
-        <div>
-          <h1 className="text-2xl font-black text-slate-900">Issue Fixer</h1>
-          <p className="text-sm text-slate-500">AI rewrites your content to fix SEO issues automatically</p>
+    <div className="flex-1 overflow-y-auto">
+      <div className="max-w-6xl mx-auto p-6 pb-24">
+        <div className="flex items-center gap-3 mb-6">
+          <span className="text-3xl">🔧</span>
+          <div>
+            <h1 className="text-2xl font-black text-slate-900">Issue Fixer</h1>
+            <p className="text-sm text-slate-500">AI rewrites your content to fix SEO issues automatically</p>
+          </div>
         </div>
-      </div>
 
-      {/* Step indicator */}
-      <div className="flex items-center gap-2 mb-6 text-xs font-bold">
-        <span className={`px-3 py-1 rounded-full ${step >= 1 ? 'bg-brand-600 text-white' : 'bg-slate-200 text-slate-500'}`}>1. Paste Content</span>
-        <span className="text-slate-300">→</span>
-        <span className={`px-3 py-1 rounded-full ${step >= 2 ? 'bg-brand-600 text-white' : 'bg-slate-200 text-slate-500'}`}>2. Review Issues</span>
-        <span className="text-slate-300">→</span>
-        <span className={`px-3 py-1 rounded-full ${step >= 3 ? 'bg-brand-600 text-white' : 'bg-slate-200 text-slate-500'}`}>3. Get Fixed Version</span>
-      </div>
+        {/* Step indicator */}
+        <div className="flex items-center gap-2 mb-6 text-xs font-bold">
+          <span className={`px-3 py-1 rounded-full ${step >= 1 ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-500'}`}>1. Paste Content</span>
+          <span className="text-slate-300">→</span>
+          <span className={`px-3 py-1 rounded-full ${step >= 2 ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-500'}`}>2. Review Issues</span>
+          <span className="text-slate-300">→</span>
+          <span className={`px-3 py-1 rounded-full ${step >= 3 ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-500'}`}>3. Get Fixed Version</span>
+        </div>
 
-      {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">{error}</div>
-      )}
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">{error}</div>
+        )}
 
-      {/* Step 1 */}
-      {step === 1 && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-6">
-          <label className="block text-sm font-bold text-slate-700 mb-2">Paste your content</label>
-          <textarea
-            value={content}
-            onChange={e => setContent(e.target.value)}
-            placeholder="Paste article, blog post, or page content here (min 50 characters)..."
-            className="w-full h-64 p-4 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-          />
-          <div className="flex items-center justify-between mt-3">
-            <span className="text-xs text-slate-500">{content.length} characters</span>
+        {/* Banner: content loaded from Scores */}
+        {step === 1 && hasSharedData && (
+          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-between">
+            <div className="text-sm text-blue-900">
+              <span className="font-bold">✓ Content & issues loaded from Scores tab.</span>
+              <span className="ml-1 text-blue-700">Click below to continue.</span>
+            </div>
             <button
-              onClick={handleAnalyse}
-              disabled={loading === 'analysing' || content.length < 50}
-              className="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 disabled:bg-slate-300 text-white text-sm font-bold rounded-xl"
+              onClick={() => setStep(2)}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg"
             >
-              {loading === 'analysing' ? 'Analysing…' : 'Find Issues →'}
+              Continue →
             </button>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Step 2 */}
-      {step === 2 && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-slate-900">Found {issues.length} issues</h2>
-            <button onClick={reset} className="text-xs text-slate-500 hover:text-slate-700">← Start over</button>
+        {/* Step 1 */}
+        {step === 1 && (
+          <div className="bg-white border border-slate-200 rounded-2xl p-6">
+            <label className="block text-sm font-bold text-slate-700 mb-2">Paste your content</label>
+            <textarea
+              value={content}
+              onChange={e => setContent(e.target.value)}
+              placeholder="Paste article, blog post, or page content here (min 50 characters)..."
+              className="w-full h-64 p-4 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <div className="flex items-center justify-between mt-3">
+              <span className="text-xs text-slate-500">{content.length} characters</span>
+              <button
+                onClick={handleAnalyse}
+                disabled={loading === 'analysing' || content.length < 50}
+                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white text-sm font-bold rounded-xl"
+              >
+                {loading === 'analysing' ? 'Analysing…' : 'Find Issues →'}
+              </button>
+            </div>
           </div>
+        )}
 
-          <div className="space-y-2 mb-6">
-            {issues.map((iss, i) => (
-              <label key={i} className="flex items-start gap-3 p-3 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={selectedIssues.has(i)}
-                  onChange={() => toggleIssue(i)}
-                  className="mt-1"
-                />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded ${
-                      iss.impact === 'high' ? 'bg-red-100 text-red-700' :
-                      iss.impact === 'medium' ? 'bg-orange-100 text-orange-700' :
-                      'bg-slate-100 text-slate-600'
-                    }`}>{iss.impact || 'medium'}</span>
-                    <span className="text-sm font-bold text-slate-900">{iss.issue}</span>
+        {/* Step 2 */}
+        {step === 2 && (
+          <div className="bg-white border border-slate-200 rounded-2xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-slate-900">Found {issues.length} issues</h2>
+              <button onClick={reset} className="text-xs text-slate-500 hover:text-slate-700">← Start over</button>
+            </div>
+
+            <div className="space-y-2 mb-6">
+              {issues.map((iss, i) => (
+                <label key={i} className="flex items-start gap-3 p-3 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={selectedIssues.has(i)}
+                    onChange={() => toggleIssue(i)}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded ${
+                        iss.impact === 'high' ? 'bg-red-100 text-red-700' :
+                        iss.impact === 'medium' ? 'bg-orange-100 text-orange-700' :
+                        'bg-slate-100 text-slate-600'
+                      }`}>{iss.impact || 'medium'}</span>
+                      <span className="text-sm font-bold text-slate-900">{iss.issue}</span>
+                    </div>
+                    {iss.fix && <p className="text-xs text-slate-500">Suggested: {iss.fix}</p>}
                   </div>
-                  {iss.fix && <p className="text-xs text-slate-500">Suggested: {iss.fix}</p>}
-                </div>
-              </label>
-            ))}
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              onClick={() => handleFix('auto')}
-              disabled={loading === 'fixing'}
-              className="flex-1 px-6 py-3 bg-brand-600 hover:bg-brand-700 disabled:bg-slate-300 text-white text-sm font-bold rounded-xl"
-            >
-              {loading === 'fixing' ? 'Fixing…' : `🪄 Auto-Fix All ${issues.length} Issues`}
-            </button>
-            <button
-              onClick={() => handleFix('selective')}
-              disabled={loading === 'fixing' || selectedIssues.size === 0}
-              className="flex-1 px-6 py-3 border border-brand-600 text-brand-600 hover:bg-brand-50 disabled:opacity-50 text-sm font-bold rounded-xl"
-            >
-              Fix Selected ({selectedIssues.size})
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Step 3 */}
-      {step === 3 && result && (
-        <div className="space-y-6">
-          <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-bold text-green-900">✓ Fixed {result.applied_fixes?.length || 0} issues</p>
-                <p className="text-xs text-green-700 mt-1">{result.changes_summary}</p>
-              </div>
-              <div className="text-right">
-                <div className="text-2xl font-black text-green-700">+{result.estimated_score_improvement}</div>
-                <div className="text-xs text-green-600">est. score</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="bg-white border border-slate-200 rounded-2xl p-5">
-              <h3 className="text-sm font-bold text-slate-500 mb-3">BEFORE</h3>
-              <div className="text-sm text-slate-700 whitespace-pre-wrap max-h-96 overflow-auto">{result.original_content}</div>
-            </div>
-            <div className="bg-white border-2 border-brand-500 rounded-2xl p-5">
-              <h3 className="text-sm font-bold text-brand-600 mb-3">AFTER (FIXED)</h3>
-              <div className="text-sm text-slate-700 max-h-96 overflow-auto prose prose-sm" dangerouslySetInnerHTML={{ __html: result.fixed_content }} />
-            </div>
-          </div>
-
-          <div className="bg-white border border-slate-200 rounded-2xl p-5">
-            <h3 className="text-sm font-bold text-slate-900 mb-3">Applied fixes</h3>
-            <ul className="space-y-2 text-sm">
-              {result.applied_fixes?.map((f, i) => (
-                <li key={i} className="flex gap-2">
-                  <span className="text-green-600">✓</span>
-                  <div>
-                    <span className="font-semibold text-slate-900">{f.issue}</span>
-                    <span className="text-slate-500"> — {f.fix_applied} <em>({f.location})</em></span>
-                  </div>
-                </li>
+                </label>
               ))}
-            </ul>
-          </div>
+            </div>
 
-          <div className="flex gap-3">
-            <button
-              onClick={downloadFixed}
-              className="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold rounded-xl"
-            >
-              ⬇ Download HTML
-            </button>
-            <button
-              onClick={reset}
-              className="px-6 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-bold rounded-xl"
-            >
-              Fix Another
-            </button>
+            {/* Sticky action buttons */}
+            <div className="sticky bottom-0 bg-white pt-4 border-t border-slate-200 flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => handleFix('auto')}
+                disabled={loading === 'fixing'}
+                className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white text-sm font-bold rounded-xl"
+              >
+                {loading === 'fixing' ? 'Fixing…' : `🪄 Auto-Fix All ${issues.length} Issues`}
+              </button>
+              <button
+                onClick={() => handleFix('selective')}
+                disabled={loading === 'fixing' || selectedIssues.size === 0}
+                className="flex-1 px-6 py-3 border border-blue-600 text-blue-600 hover:bg-blue-50 disabled:opacity-50 text-sm font-bold rounded-xl"
+              >
+                Fix Selected ({selectedIssues.size})
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Step 3 */}
+        {step === 3 && result && (
+          <div className="space-y-6">
+            <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-bold text-green-900">✓ Fixed {result.applied_fixes?.length || 0} issues</p>
+                  <p className="text-xs text-green-700 mt-1">{result.changes_summary}</p>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-black text-green-700">+{result.estimated_score_improvement}</div>
+                  <div className="text-xs text-green-600">est. score</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="bg-white border border-slate-200 rounded-2xl p-5">
+                <h3 className="text-sm font-bold text-slate-500 mb-3">BEFORE</h3>
+                <div className="text-sm text-slate-700 whitespace-pre-wrap max-h-96 overflow-auto">{result.original_content}</div>
+              </div>
+              <div className="bg-white border-2 border-blue-500 rounded-2xl p-5">
+                <h3 className="text-sm font-bold text-blue-600 mb-3">AFTER (FIXED)</h3>
+                <div className="text-sm text-slate-700 max-h-96 overflow-auto prose prose-sm" dangerouslySetInnerHTML={{ __html: result.fixed_content }} />
+              </div>
+            </div>
+
+            <div className="bg-white border border-slate-200 rounded-2xl p-5">
+              <h3 className="text-sm font-bold text-slate-900 mb-3">Applied fixes</h3>
+              <ul className="space-y-2 text-sm">
+                {result.applied_fixes?.map((f, i) => (
+                  <li key={i} className="flex gap-2">
+                    <span className="text-green-600">✓</span>
+                    <div>
+                      <span className="font-semibold text-slate-900">{f.issue}</span>
+                      <span className="text-slate-500"> — {f.fix_applied} <em>({f.location})</em></span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={downloadFixed}
+                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl"
+              >
+                ⬇ Download HTML
+              </button>
+              <Link
+                href="/dashboard/scores"
+                className="px-6 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-bold rounded-xl"
+              >
+                Analyze Fixed Content
+              </Link>
+              <button
+                onClick={reset}
+                className="px-6 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-bold rounded-xl"
+              >
+                Fix Another
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
