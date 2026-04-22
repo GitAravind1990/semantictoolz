@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
 
     const realSerpData = await fetchRealSERP(keyword, city, countryCode || 'us')
     const serpContext = realSerpData.length > 0 
-      ? `\n\nREAL GOOGLE SERP DATA (top 10 results) — USE THESE EXACT URLS AS COMPETITORS:\n${realSerpData.map(r => `${r.position}. ${r.url}\n   Title: ${r.title}\n   Snippet: ${r.snippet}`).join('\n\n')}`
+     ? `\n\nREAL GOOGLE SERP TOP 5 URLS (use these exactly):\n${realSerpData.slice(0, 5).map(r => `${r.position}. ${r.url} - ${r.title.slice(0, 80)}`).join('\n')}`
       : '\n\nNo real SERP data available — use best estimates.'
 
     const ctx = `URL:${url} | Keyword:"${keyword}" | Position:#${position || '?'} | Biz:${biztype || 'business'}${city ? ` | City:${city}` : ''}${serpContext}`
@@ -91,7 +91,7 @@ Rules: Use the EXACT URLs from the real SERP data above. 5 competitors from the 
 Rules: phase1=3 tasks (weeks 1-4), phase2=3 tasks (weeks 5-10), phase3=3 tasks (weeks 11-20). Realistic rank projection.`
 
     const [r1, r2] = await Promise.all([
-      callClaude(sys1, `SERP audit for: ${url} targeting "${keyword}"`, 2500),
+      callClaude(sys1, `SERP audit for: ${url} targeting "${keyword}"`, 4000),
       callClaude(sys2, `Recovery plan for: ${url} targeting "${keyword}"`, 2000),
     ])
 
