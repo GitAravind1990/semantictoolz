@@ -1,6 +1,7 @@
 'use client'
 
 import { useContent } from '@/context/ContentContext'
+import Link from 'next/link'
 import { Card, Badge, EmptyState } from '@/components/ui'
 import { exportIssuesCSV, exportIssuesPDF } from '@/lib/export'
 
@@ -22,9 +23,19 @@ export default function IssuesPage() {
       <div className="max-w-3xl mx-auto fade-up space-y-4">
         <div className="flex items-center justify-between">
           <h1 className="text-base font-black">Content Issues</h1>
-          <Badge variant={issues.length > 5 ? 'red' : issues.length > 2 ? 'amber' : 'green'}>
-            {issues.length} issues found
-          </Badge>
+          <div className="flex items-center gap-3">
+            <Badge variant={issues.length > 5 ? 'red' : issues.length > 2 ? 'amber' : 'green'}>
+              {issues.length} issues found
+            </Badge>
+            {issues.length > 0 && (
+              <Link
+                href="/dashboard/fixer"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 px-3 py-1.5 text-xs font-bold text-white"
+              >
+                🔧 Fix these issues →
+              </Link>
+            )}
+          </div>
         </div>
 
         {issues.length === 0 ? (

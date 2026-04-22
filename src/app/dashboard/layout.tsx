@@ -8,26 +8,27 @@ import { ContentProvider } from '@/context/ContentContext'
 
 type UsageData = { plan: string; count: number; limit: number; remaining: number }
 
-const FREE_TOOLS   = ['scores','issues','entities','aicite']
-const PRO_TOOLS    = ['eeat','backlinks','rewrite','citation','gap','queries']
+const FREE_TOOLS   = ['content analyzer','issues','entities','aicite']
+const PRO_TOOLS    = ['eeat','backlinks','rewrite','fixer','citation','gap','queries']
 const AGENCY_TOOLS = ['tracker','local','serp','topical']
 
 const TOOL_META: Record<string, { label: string; icon: string }> = {
-  scores:    { label: 'Scores',             icon: '📊' },
-  issues:    { label: 'Issues',             icon: '🔍' },
-  entities:  { label: 'Entities',           icon: '🔗' },
-  aicite:    { label: 'AI Cite Score',      icon: '🤖' },
-  eeat:      { label: 'E-E-A-T',            icon: '🏆' },
-  backlinks: { label: 'Relevant Backlinks', icon: '🔗' },
-  rewrite:   { label: 'AI Rewrite',         icon: '✍️' },
-  citation:  { label: 'Citation Plan',      icon: '📎' },
-  gap:       { label: 'Content Gap',        icon: '🕳️' },
-  queries:   { label: 'AI Queries',         icon: '🔎' },
-  tracker:   { label: 'Cite Tracker',       icon: '🎯' },
-  local:     { label: 'Local SEO',          icon: '📍' },
-  serp:      { label: 'SERP Audit',         icon: '📈' },
-  topical:   { label: 'Topical Authority',  icon: '🗺️' },
-  settings:  { label: 'Settings',           icon: '⚙️' },
+  content analyzer:    { label: 'Content Analyzer',             icon: '📊' },
+  issues:              { label: 'Issues',                       icon: '🔍' },
+  entities:            { label: 'Entities',                     icon: '🔗' },
+  aicite:              { label: 'AI Cite Score',                icon: '🤖' },
+  eeat:                { label: 'E-E-A-T',                      icon: '🏆' },
+  backlinks:           { label: 'Relevant Backlinks',           icon: '🔗' },
+  rewrite:             { label: 'AI Rewrite',                   icon: '✍️' },
+  fixer:               { label: 'Issue Fixer',                  icon: 'ðŸ”§' },
+  citation:            { label: 'Citation Plan',                icon: '📎' },
+  gap:                 { label: 'Content Gap',                  icon: '🕳️' },
+  queries:             { label: 'AI Queries',                   icon: '🔎' },
+  tracker:             { label: 'Cite Tracker',                 icon: '🎯' },
+  local:               { label: 'Local SEO',                    icon: '📍' },
+  serp:                { label: 'SERP Audit',                   icon: '📈' },
+  topical:             { label: 'Topical Authority',            icon: '🗺️' },
+  settings:            { label: 'Settings',                     icon: '⚙️' },
 }
 
 function isUnlocked(tool: string, plan: string): boolean {
