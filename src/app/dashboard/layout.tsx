@@ -13,7 +13,7 @@ const PRO_TOOLS    = ['eeat','backlinks','rewrite','fixer','citation','gap','que
 const AGENCY_TOOLS = ['tracker','local','serp','topical']
 
 const TOOL_META: Record<string, { label: string; icon: string }> = {
-  content analyzer:    { label: 'Content Analyzer',             icon: '📊' },
+  scores:              { label: 'Content Analyzer',             icon: '📊' },
   issues:              { label: 'Issues',                       icon: '🔍' },
   entities:            { label: 'Entities',                     icon: '🔗' },
   aicite:              { label: 'AI Cite Score',                icon: '🤖' },
