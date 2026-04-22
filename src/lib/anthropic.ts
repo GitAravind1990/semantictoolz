@@ -20,6 +20,7 @@ export async function callClaude(
   const message = await anthropic.messages.create({
     model,
     max_tokens: maxTokens,
+    temperature: 0,
     system,
     messages: [{ role: 'user', content: prompt }],
   })
