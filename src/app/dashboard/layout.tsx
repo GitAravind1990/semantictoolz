@@ -8,7 +8,7 @@ import { ContentProvider } from '@/context/ContentContext'
 
 type UsageData = { plan: string; count: number; limit: number; remaining: number }
 
-const FREE_TOOLS   = ['content analyzer','issues','entities','aicite']
+const FREE_TOOLS   = ['scores','issues','entities','aicite']
 const PRO_TOOLS    = ['eeat','backlinks','rewrite','fixer','citation','gap','queries']
 const AGENCY_TOOLS = ['tracker','local','serp','topical']
 
