@@ -9,8 +9,8 @@ import { ContentProvider } from '@/context/ContentContext'
 type UsageData = { plan: string; count: number; limit: number; remaining: number }
 
 const FREE_TOOLS   = ['scores','issues','entities','aicite']
-const PRO_TOOLS    = ['eeat','backlinks','rewrite','fixer','schema','citation','gap','queries']
-const AGENCY_TOOLS = ['tracker','local','serp','topical','schema']
+const PRO_TOOLS    = ['eeat','backlinks','rewrite','fixer','schema','citation','gap','queries','optimizer']
+const AGENCY_TOOLS = ['tracker','local','serp','topical','schema','optimizer']
 
 const TOOL_META: Record<string, { label: string; icon: string }> = {
   scores:              { label: 'Content Analyzer',             icon: '📊' },
