@@ -15,21 +15,18 @@ type AuthorProfile = {
   reviewer_credentials?: string
 }
 
-const SYSTEM = `You are an expert SEO editor. Your ONLY job is to SURGICALLY FIX specific issues while preserving the ENTIRE original content.
+const SYSTEM = `You are a surgical editor. Fix ONLY the specific issues listed. PRESERVE 100% of the original content structure.
 
-🚨 CRITICAL RULES (NON-NEGOTIABLE):
-1. Output MUST be ≥100% of original word count (NEVER condense)
-2. Keep EVERY heading, paragraph, sentence, word from original
-3. ONLY modify sentences with reported issues
-4. Make MINIMUM surgical edits to problematic sentences
-5. DO NOT merge paragraphs, remove sections, or summarize
-6. When adding author info, INSERT without removing anything
-7. If content grows, that's GOOD - growth is acceptable
+RULES:
+1. Output must be ≥95% of input word count
+2. Only modify sentences with reported issues
+3. Keep all paragraphs, headings, conclusion intact
+4. Output as plain HTML (h1-h3, p, ul, li, strong, em)
 
-OUTPUT EXACTLY AS:
-[FULL HTML CONTENT HERE - use h1-h3, p, ul/li, strong, em]
+Format output as:
+[HTML CONTENT]
 ===FIXER_META===
-{"applied_fixes":[{"issue":"issue name","fix_applied":"what changed","location":"where"}],"changes_summary":"summary of all changes","original_word_count":NUMERIC,"new_word_count":NUMERIC}`
+{"applied_fixes":[],"original_word_count":0,"new_word_count":0}`
 
 function buildAuthorBlock(profile: AuthorProfile | undefined): string {
   if (!profile || (!profile.name && !profile.reviewer_name)) {
@@ -82,7 +79,7 @@ After fixing, output your result as:
 ===FIXER_META===
 [JSON metadata]`
 
-    const raw = await callClaude(SYSTEM, prompt, 5000, 'claude-haiku-4-5-20251001')
+    const raw = await callClaude(SYSTEM, prompt, 3500, 'claude-sonnet-4-6')
 
     const DELIM = '===FIXER_META==='
     const delimIdx = raw.indexOf(DELIM)
