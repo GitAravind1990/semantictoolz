@@ -81,11 +81,11 @@ ISSUES TO FIX:
 ${issuesList}
 
 ORIGINAL CONTENT (preserve structure, headings, paragraphs, and facts):
-${content.slice(0, 8000)}
+${content.slice(0, 5000)}
 
 Apply surgical fixes. Keep everything else byte-for-byte identical where possible. Output HTML, then delimiter, then JSON meta.`
 
-    const raw = await callClaude(SYSTEM, prompt, 6000, 'claude-sonnet-4-6')
+    const raw = await callClaude(SYSTEM, prompt, 5000, 'claude-sonnet-4-6')
 
     const DELIM = '===FIXER_META==='
     const delimIdx = raw.indexOf(DELIM)
