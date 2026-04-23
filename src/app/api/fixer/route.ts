@@ -87,12 +87,18 @@ After fixing, output your result as:
     const DELIM = '===FIXER_META==='
     const delimIdx = raw.indexOf(DELIM)
 
-    if (delimIdx === -1) {
-      return apiError({ message: 'Invalid response format', status: 500, name: 'ParseError' })
-    }
+    let fixedContent: string
+    let metaRaw: string
 
-    let fixedContent = raw.substring(0, delimIdx).trim()
-    const metaRaw = raw.substring(delimIdx + DELIM.length).trim()
+    if (delimIdx > 0) {
+      // Delimiter found - split content and metadata
+      fixedContent = raw.substring(0, delimIdx).trim()
+      metaRaw = raw.substring(delimIdx + DELIM.length).trim()
+    } else {
+      // No delimiter - use entire response as content
+      fixedContent = raw.trim()
+      metaRaw = ''
+    }
 
     // Clean up HTML formatting
     fixedContent = fixedContent.replace(/^```html\n?/i, '').replace(/^```\n?/i, '').replace(/\n?```$/i, '').trim()
