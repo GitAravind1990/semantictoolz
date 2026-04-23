@@ -21,6 +21,7 @@ const TOOL_META: Record<string, { label: string; icon: string }> = {
   backlinks:           { label: 'Relevant Backlinks',           icon: '🔗' },
   rewrite:             { label: 'AI Rewrite',                   icon: '✍️' },
   fixer:               { label: 'Issue Fixer',                  icon: '🔧' },
+  schema:              { label: 'Schema Generator',             icon: '📋' },
   citation:            { label: 'Citation Plan',                icon: '📎' },
   gap:                 { label: 'Content Gap',                  icon: '🕳️' },
   queries:             { label: 'AI Queries',                   icon: '🔎' },
