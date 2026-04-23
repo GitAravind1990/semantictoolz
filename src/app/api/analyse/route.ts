@@ -1,3 +1,10 @@
+import { NextRequest } from 'next/server'
+import { requireAuth } from '@/lib/auth'
+import { callClaude, extractJSON } from '@/lib/anthropic'
+import { apiError, apiSuccess } from '@/lib/api'
+
+export const runtime = 'nodejs'
+
 const SYSTEM = `You are an expert SEO and content analyst. Analyse the provided content and return ONLY valid JSON. NO other text.
 
 Return this exact structure:
@@ -30,16 +37,48 @@ Return this exact structure:
 }
 
 CATEGORY MAPPING (MANDATORY):
-- If issue mentions: schema, meta tag, HTML structure → category: "technical"
+- If issue mentions: schema, meta tag, HTML structure, markup → category: "technical"
 - If issue mentions: author, credentials, expertise, author schema → category: "eeat"
 - If issue mentions: undefined terms, entities, links to concepts → category: "entities"
-- If issue mentions: unsourced claims, citations, attribution, reviews → category: "citations"
+- If issue mentions: unsourced claims, citations, attribution, reviews, evidence → category: "citations"
 - If issue mentions: vague, shallow, lacking details, weak explanations → category: "semantic"
 
 RULES:
 - overall_score: 0-100
 - grade: S(90+) A(80+) B(70+) C(55+) D(<55)
 - top_issues: 5-7 ranked by impact
-- EVERY issue MUST have a category field inside the JSON object
-- Do NOT append category to the fix text
-- Return ONLY JSON, no markdown, no text before or after`
+- EVERY issue MUST have a category field inside JSON
+- Do NOT append category to fix text
+- Return ONLY JSON`
+
+export async function POST(req: NextRequest) {
+  try {
+    const user = await requireAuth('analyse')
+    const { content } = await req.json()
+
+    if (!content || content.length < 50) {
+      return apiError({ message: 'Content too short', status: 400, name: 'ValidationError' })
+    }
+
+    const raw = await callClaude(
+      SYSTEM,
+      `Analyse this content:\n\n${content.slice(0, 5000)}`,
+      2000
+    )
+
+    const result = extractJSON(raw)
+
+    // Validate and ensure all issues have category and type
+    if (result.top_issues && Array.isArray(result.top_issues)) {
+      result.top_issues = result.top_issues.map((issue: any) => ({
+        ...issue,
+        category: issue.category || 'semantic',
+        type: issue.type || 'vague_explanation'
+      }))
+    }
+
+    return apiSuccess({ ...result, userPlan: user.plan })
+  } catch (e) {
+    return apiError(e)
+  }
+}
