@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
 ${authorBlock}
 
 ORIGINAL WORD COUNT: ${originalWordCount} words.
-YOUR OUTPUT MUST BE AT LEAST ${Math.floor(originalWordCount * 0.95)} WORDS. Do not shorten the article.
+YOUR OUTPUT MUST BE AT LEAST ${Math.floor(originalWordCount * 0.90)} WORDS (90% of original).
 
 ISSUES TO FIX:
 ${issuesList}
@@ -85,7 +85,7 @@ ${content.slice(0, 5000)}
 
 Apply surgical fixes. Keep everything else byte-for-byte identical where possible. Output HTML, then delimiter, then JSON meta.`
 
-    const raw = await callClaude(SYSTEM, prompt, 5000, 'claude-sonnet-4-6')
+    cconst raw = await callClaude(SYSTEM, prompt, 4000, 'claude-haiku-4-5-20251001')
 
     const DELIM = '===FIXER_META==='
     const delimIdx = raw.indexOf(DELIM)
