@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { requireAuth } from '@/lib/auth'
-import { callClaude, extractJSON } from '@/lib/anthropic'
+import { callClaude } from '@/lib/anthropic'
 import { apiError, apiSuccess } from '@/lib/api'
 
 export const runtime = 'nodejs'
@@ -15,26 +15,13 @@ type AuthorProfile = {
   reviewer_credentials?: string
 }
 
-const SYSTEM = `You are a content preservation expert. Output the COMPLETE original content with ZERO deletions.
-
-CRITICAL RULES:
-- Output EVERY word, paragraph, heading, section from original
-- NEVER condense, merge, or remove content
-- Add text if needed to fix issues, but NEVER remove
-- Output must be ≥100% of original word count
-- Format as clean HTML (h1-h3, p, ul, li, strong, em)`
+const SYSTEM = `Rewrite the content to fix the issues. Keep it the same length or longer. Output only HTML.`
 
 function buildAuthorBlock(profile: AuthorProfile | undefined): string {
-  if (!profile || (!profile.name && !profile.reviewer_name)) {
-    return 'Use generic byline.'
-  }
+  if (!profile || (!profile.name && !profile.reviewer_name)) return ''
   const lines: string[] = []
   if (profile.name) lines.push(`Author: ${profile.name}`)
-  if (profile.title) lines.push(`Title: ${profile.title}`)
   if (profile.credentials) lines.push(`Credentials: ${profile.credentials}`)
-  if (profile.experience) lines.push(`Experience: ${profile.experience}`)
-  if (profile.reviewer_name) lines.push(`Reviewer: ${profile.reviewer_name}`)
-  if (profile.reviewer_credentials) lines.push(`Reviewer Credentials: ${profile.reviewer_credentials}`)
   return lines.join(' | ')
 }
 
@@ -51,36 +38,24 @@ export async function POST(req: NextRequest) {
     }
 
     const originalWordCount = content.trim().split(/\s+/).length
-    const issuesList = issues.slice(0, 10).map((i: any, idx: number) =>
-      `${idx + 1}. ${i.issue}`
-    ).join('\n')
+    const issuesList = issues.slice(0, 5).map((i: any) => `- ${i.issue}`).join('\n')
+    const authorInfo = buildAuthorBlock(author as AuthorProfile | undefined)
 
-    const authorBlock = buildAuthorBlock(author as AuthorProfile | undefined)
+    const prompt = `Fix these issues: ${issuesList}
 
-    const prompt = `Output the COMPLETE original content below. Include EVERY paragraph and the conclusion.
+Author: ${authorInfo}
 
-Fix ONLY these issues by adding or modifying text (NEVER delete):
-${issuesList}
+Content (keep all paragraphs, especially the conclusion):
+${content.slice(0, 7000)}`
 
-Author info: ${authorBlock}
-
-ORIGINAL (preserve all, output ≥${originalWordCount} words):
-${content}
-
-Output as HTML. Do not condense.`
-
-    const raw = await callClaude(SYSTEM, prompt, 8000, 'claude-sonnet-4-6')
+    const raw = await callClaude(SYSTEM, prompt, 4000, 'claude-haiku-4-5-20251001')
 
     let fixedContent = raw.trim()
-    
-    // Clean markdown fences if present
-    fixedContent = fixedContent
       .replace(/^```html\n?/i, '')
       .replace(/^```\n?/i, '')
       .replace(/\n?```$/i, '')
       .trim()
 
-    // Count words from HTML
     const newWordCount = fixedContent
       .replace(/<[^>]+>/g, ' ')
       .trim()
@@ -90,7 +65,7 @@ Output as HTML. Do not condense.`
     return apiSuccess({
       fixed_content: fixedContent,
       applied_fixes: [],
-      changes_summary: 'Content fixed while preserving original.',
+      changes_summary: 'Content fixed.',
       original_word_count: originalWordCount,
       new_word_count: newWordCount,
       length_ratio: Math.round((newWordCount / originalWordCount) * 100),
