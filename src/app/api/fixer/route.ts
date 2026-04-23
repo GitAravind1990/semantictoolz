@@ -85,7 +85,7 @@ ${content.slice(0, 5000)}
 
 Apply surgical fixes. Keep everything else byte-for-byte identical where possible. Output HTML, then delimiter, then JSON meta.`
 
-    cconst raw = await callClaude(SYSTEM, prompt, 4000, 'claude-haiku-4-5-20251001')
+    const raw = await callClaude(SYSTEM, prompt, 4000, 'claude-haiku-4-5-20251001')
 
     const DELIM = '===FIXER_META==='
     const delimIdx = raw.indexOf(DELIM)
