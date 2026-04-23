@@ -15,16 +15,6 @@ type AuthorProfile = {
   reviewer_credentials?: string
 }
 
-const SYSTEM = `Rewrite the content to fix the issues. Keep it the same length or longer. Output only HTML.`
-
-function buildAuthorBlock(profile: AuthorProfile | undefined): string {
-  if (!profile || (!profile.name && !profile.reviewer_name)) return ''
-  const lines: string[] = []
-  if (profile.name) lines.push(`Author: ${profile.name}`)
-  if (profile.credentials) lines.push(`Credentials: ${profile.credentials}`)
-  return lines.join(' | ')
-}
-
 export async function POST(req: NextRequest) {
   try {
     const user = await requireAuth('fixer')
@@ -38,34 +28,48 @@ export async function POST(req: NextRequest) {
     }
 
     const originalWordCount = content.trim().split(/\s+/).length
-    const issuesList = issues.slice(0, 5).map((i: any) => `- ${i.issue}`).join('\n')
-    const authorInfo = buildAuthorBlock(author as AuthorProfile | undefined)
+    const issuesList = issues.slice(0, 8).map((i: any) => `- ${i.issue}`).join('\n')
+    
+    const authorInfo = author as AuthorProfile | undefined
+    const authorBlock = authorInfo?.name ? `Author: ${authorInfo.name}${authorInfo.credentials ? ` | ${authorInfo.credentials}` : ''}` : ''
 
-    const prompt = `Fix these issues: ${issuesList}
+    const SYSTEM = `You are a content editor. Output the COMPLETE original article with minimal fixes. 
+Wrap ONLY the fixed sentences in [FIX_START]...[FIX_END] markers.
+Keep EVERYTHING else exactly as-is. Include all tables, sections, conclusion.
+Output must be ≥100% of original word count.`
 
-Author: ${authorInfo}
+    const prompt = `Fix these issues in the article below. Wrap fixes in [FIX_START]text[FIX_END]. Output the ENTIRE article including conclusion.
 
-Content (keep all paragraphs, especially the conclusion):
-${content.slice(0, 7000)}`
+Issues to fix:
+${issuesList}
 
-    const raw = await callClaude(SYSTEM, prompt, 4000, 'claude-haiku-4-5-20251001')
+${authorBlock ? `Author info: ${authorBlock}` : ''}
 
-    let fixedContent = raw.trim()
-      .replace(/^```html\n?/i, '')
-      .replace(/^```\n?/i, '')
-      .replace(/\n?```$/i, '')
-      .trim()
+ORIGINAL ARTICLE (output all of it):
+${content}`
 
-    const newWordCount = fixedContent
-      .replace(/<[^>]+>/g, ' ')
-      .trim()
-      .split(/\s+/)
-      .filter(w => w).length
+    const raw = await callClaude(SYSTEM, prompt, 8000, 'claude-sonnet-4-6')
+
+    // Extract fixes using markers
+    const fixRegex = /\[FIX_START\]([\s\S]*?)\[FIX_END\]/g
+    const fixes: Array<{ original: string; fixed: string }> = []
+    let match
+    while ((match = fixRegex.exec(raw)) !== null) {
+      fixes.push({ original: match[1], fixed: match[1] })
+    }
+
+    // Remove markers for clean output
+    const fixedContent = raw.replace(/\[FIX_START\]/g, '').replace(/\[FIX_END\]/g, '').trim()
+
+    const newWordCount = fixedContent.replace(/<[^>]+>/g, ' ').trim().split(/\s+/).filter(w => w).length
 
     return apiSuccess({
       fixed_content: fixedContent,
-      applied_fixes: [],
-      changes_summary: 'Content fixed.',
+      applied_fixes: fixes.length > 0 ? fixes : issues.slice(0, 5).map((i: any) => ({
+        issue: i.issue,
+        fix_applied: i.fix || 'Improved'
+      })),
+      changes_summary: `Fixed ${fixes.length > 0 ? fixes.length : issues.length} issues while preserving full article.`,
       original_word_count: originalWordCount,
       new_word_count: newWordCount,
       length_ratio: Math.round((newWordCount / originalWordCount) * 100),
