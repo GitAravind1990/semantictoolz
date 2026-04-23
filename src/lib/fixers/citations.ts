@@ -18,16 +18,13 @@ export async function fixCitationIssues(
   content: string,
   issues: FixerIssue[]
 ): Promise<{ fixed_content: string; applied_fixes: AppliedFix[] }> {
-  // Filter only citation-related issues
   const citationIssues = issues.filter((i) => i.category === 'citations')
 
   if (citationIssues.length === 0) {
     return { fixed_content: content, applied_fixes: [] }
   }
 
-  // Detect industry context
   const industry = detectIndustry(content)
-
   const issuesList = citationIssues.map((i) => i.issue).join('\n')
 
   const prompt = `You are editing content for the ${industry} industry.
@@ -38,26 +35,28 @@ ${content}
 Citation/attribution issues to fix:
 ${issuesList}
 
-For EACH unsourced claim, provide:
-1. The exact claim/sentence that needs a citation
-2. A contextual source or attribution appropriate for ${industry}
-3. How to integrate it naturally (e.g., "per [source]", "[source, year]", etc.)
+Find EVERY unsourced claim, statistic, or assertion in the content that needs citation. For each one, provide:
+1. The exact claim/sentence (word-for-word from content)
+2. A contextual source or attribution appropriate for ${industry} (e.g., "per 2024 industry report", "according to customer survey", "based on case study")
+3. How to integrate it naturally
+
+Be thorough - identify ALL claims needing citations, not just 1-2.
 
 Return ONLY valid JSON:
 {
   "fixes": [
     {
-      "claim": "the unsourced claim/sentence",
-      "source": "appropriate source or attribution",
-      "attribution_format": "how to integrate (e.g., 'per [source]')"
+      "claim": "the exact unsourced claim",
+      "source": "contextual source or attribution",
+      "attribution_format": "how to integrate (e.g., 'per [source]', '[source, year]')"
     }
   ]
 }`
 
   const raw = await callClaude(
-    `You are a universal content editor. For any industry, identify unsourced claims and suggest contextual attributions. Return ONLY JSON.`,
+    `You are a comprehensive content editor. For any industry, identify ALL unsourced claims and suggest detailed contextual attributions. Return ONLY JSON.`,
     prompt,
-    2000,
+    3000,
     'claude-haiku-4-5-20251001'
   )
 
@@ -72,14 +71,12 @@ Return ONLY valid JSON:
     return { fixed_content: content, applied_fixes: [] }
   }
 
-  // Apply fixes surgically
   let fixedContent = content
   const appliedFixes: AppliedFix[] = []
 
   if (fixesData.fixes && Array.isArray(fixesData.fixes)) {
     for (const fix of fixesData.fixes) {
       if (fix.claim && fix.source) {
-        // Find the claim in content and append attribution
         const claimRegex = new RegExp(escapeRegex(fix.claim), 'g')
         let count = 0
         const originalLength = fixedContent.length
@@ -87,9 +84,10 @@ Return ONLY valid JSON:
         fixedContent = fixedContent.replace(claimRegex, (match) => {
           count++
           if (count === 1) {
-            // Append source attribution naturally
             const format = fix.attribution_format || `${match} (${fix.source})`
-            return `${match} ${fix.attribution_format ? fix.attribution_format.replace('[source]', fix.source) : `(${fix.source})`}`
+            return format.includes('[source]') 
+              ? format.replace('[source]', fix.source)
+              : `${match} (${fix.source})`
           }
           return match
         })
@@ -123,7 +121,7 @@ function detectIndustry(content: string): string {
 
   for (const [industry, words] of Object.entries(keywords)) {
     const matchCount = words.filter((w) => contentLower.includes(w.toLowerCase())).length
-    if (matchCount >= 3) {
+    if (matchCount >= 2) {
       return industry
     }
   }

@@ -17,17 +17,13 @@ export async function fixTechnicalIssues(
   content: string,
   issues: FixerIssue[]
 ): Promise<{ fixed_content: string; applied_fixes: AppliedFix[] }> {
-  // Filter only technical SEO issues
   const technicalIssues = issues.filter((i) => i.category === 'technical')
 
   if (technicalIssues.length === 0) {
     return { fixed_content: content, applied_fixes: [] }
   }
 
-  // Detect industry context
   const industry = detectIndustry(content)
-
-  // Extract title from content (first H1 or first line)
   const titleMatch = content.match(/<h1[^>]*>(.*?)<\/h1>/i) || content.match(/^#+\s(.+)/m)
   const contentTitle = titleMatch ? titleMatch[1] : 'Content Title'
 
@@ -36,16 +32,19 @@ export async function fixTechnicalIssues(
   const prompt = `You are a technical SEO expert for the ${industry} industry.
 
 Content Title: ${contentTitle}
-Content:
-${content.substring(0, 1000)}...
+Content Preview:
+${content.substring(0, 1500)}...
 
-Technical SEO issues:
+Technical SEO issues to fix:
 ${issuesList}
 
-For each technical SEO issue, provide:
-1. Specific recommendation (meta tag, schema markup, structure improvement)
-2. Implementation (exact code or instruction)
-3. Why it helps SEO for ${industry}
+For EVERY technical SEO issue, provide:
+1. Specific recommendation (what to implement)
+2. Detailed implementation (exact code snippet or precise instruction)
+3. Why it helps ${industry} SEO
+4. Priority level (high/medium/low)
+
+Be thorough - provide detailed, actionable recommendations for ALL issues, not just 1-2.
 
 Return ONLY valid JSON:
 {
@@ -53,16 +52,17 @@ Return ONLY valid JSON:
     {
       "issue": "the technical issue",
       "recommendation": "what to implement",
-      "implementation": "exact code or instruction",
-      "seo_benefit": "why this helps"
+      "implementation": "exact code, tag, or detailed instruction",
+      "seo_benefit": "why this helps SEO",
+      "priority": "high|medium|low"
     }
   ]
 }`
 
   const raw = await callClaude(
-    `You are a universal technical SEO expert. For any industry, provide specific technical SEO recommendations with implementation details. Return ONLY JSON.`,
+    `You are a comprehensive technical SEO expert. For any industry, provide detailed, actionable technical SEO recommendations with exact implementations. Return ONLY JSON.`,
     prompt,
-    2000,
+    3000,
     'claude-haiku-4-5-20251001'
   )
 
@@ -77,29 +77,27 @@ Return ONLY valid JSON:
     return { fixed_content: content, applied_fixes: [] }
   }
 
-  // For technical SEO, we add suggestions as comments/notes rather than modifying content
-  // This preserves the original content while providing actionable recommendations
   let fixedContent = content
   const appliedFixes: AppliedFix[] = []
 
   if (fixesData.fixes && Array.isArray(fixesData.fixes)) {
-    // Prepend technical SEO recommendations as a comment section
-    let technicalNotes = '<!-- TECHNICAL SEO RECOMMENDATIONS -->\n'
+    // Build comprehensive technical recommendations section
+    let technicalNotes = '\n\n<!-- TECHNICAL SEO RECOMMENDATIONS -->\n'
 
     for (const fix of fixesData.fixes) {
       if (fix.recommendation && fix.implementation) {
-        technicalNotes += `<!-- ${fix.issue}: ${fix.recommendation} -->\n`
+        technicalNotes += `<!-- [${fix.priority?.toUpperCase() || 'MEDIUM'}] ${fix.issue}: ${fix.recommendation} -->\n`
+        technicalNotes += `<!-- Implementation: ${fix.implementation.substring(0, 200)} -->\n\n`
+        
         appliedFixes.push({
-          issue: `Technical SEO: ${fix.issue}`,
+          issue: `[${fix.priority?.toUpperCase() || 'MEDIUM'}] ${fix.issue}`,
           recommendation: fix.recommendation,
           implementation: fix.implementation.substring(0, 150)
         })
       }
     }
 
-    technicalNotes += '<!-- END TECHNICAL SEO RECOMMENDATIONS -->\n\n'
-
-    // Add recommendations at the top as HTML comments (won't display but visible in source)
+    technicalNotes += '<!-- END TECHNICAL SEO RECOMMENDATIONS -->\n'
     fixedContent = technicalNotes + content
   }
 
@@ -120,7 +118,7 @@ function detectIndustry(content: string): string {
 
   for (const [industry, words] of Object.entries(keywords)) {
     const matchCount = words.filter((w) => contentLower.includes(w.toLowerCase())).length
-    if (matchCount >= 3) {
+    if (matchCount >= 2) {
       return industry
     }
   }

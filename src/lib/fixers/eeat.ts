@@ -27,16 +27,13 @@ export async function fixEEATIssues(
   issues: FixerIssue[],
   author?: AuthorProfile
 ): Promise<{ fixed_content: string; applied_fixes: AppliedFix[] }> {
-  // Filter only E-E-A-T related issues
   const eeatIssues = issues.filter((i) => i.category === 'eeat')
 
   if (eeatIssues.length === 0) {
     return { fixed_content: content, applied_fixes: [] }
   }
 
-  // Detect industry context
   const industry = detectIndustry(content)
-
   const issuesList = eeatIssues.map((i) => i.issue).join('\n')
   const authorInfo = author
     ? `Provided author: ${author.name || 'Unknown'}, ${author.credentials || 'Credentials not provided'}, ${author.experience || 'Experience not provided'}`
@@ -47,33 +44,36 @@ export async function fixEEATIssues(
 Content:
 ${content}
 
-E-E-A-T issues (Expertise, Authoritativeness, Trustworthiness):
+E-E-A-T issues:
 ${issuesList}
 
 Author information:
 ${authorInfo}
 
-Create a professional author/expert credentials section that:
-1. Fits naturally into ${industry} content
-2. Establishes credibility and expertise
-3. Is 2-3 sentences maximum
-4. Uses the provided author info if available, or suggest generic format if not
+Create a COMPREHENSIVE author/expert credentials section that:
+1. Establishes expertise across MULTIPLE dimensions (certifications, experience, achievements, specializations)
+2. Includes specific credentials, years of experience, awards/recognition
+3. For ${industry}: include industry-specific qualifications
+4. Can be 3-5 sentences (detailed, not minimal)
+5. If no author provided, create a generic expert bio template
+6. Include multiple expertise areas if possible
 
 Return ONLY valid JSON:
 {
-  "author_section": "The HTML/text for the author section (can include <strong>, <em>, etc.)",
-  "placement": "where in article to place it (top, after_intro, or before_conclusion)",
-  "explanation": "why this placement helps E-E-A-T"
+  "author_section": "The detailed HTML/text for the author section",
+  "placement": "top|after_intro|before_conclusion",
+  "explanation": "why this placement helps E-E-A-T",
+  "expertise_areas": ["area1", "area2", "area3"]
 }`
 
   const raw = await callClaude(
-    `You are a universal content editor. For any industry, create author/expert credibility sections. Return ONLY JSON.`,
+    `You are a comprehensive E-E-A-T editor. For any industry, create detailed author/expert credibility sections with multiple expertise dimensions. Return ONLY JSON.`,
     prompt,
-    1500,
+    2000,
     'claude-haiku-4-5-20251001'
   )
 
-  let fixesData: any = { author_section: '', placement: 'top' }
+  let fixesData: any = { author_section: '', placement: 'top', expertise_areas: [] }
   try {
     const jsonMatch = raw.match(/\{[\s\S]*\}/)
     if (jsonMatch) {
@@ -88,14 +88,11 @@ Return ONLY valid JSON:
   const appliedFixes: AppliedFix[] = []
 
   if (fixesData.author_section) {
-    // Insert author section based on placement
     const placement = fixesData.placement || 'top'
 
     if (placement === 'top') {
-      // Insert at very beginning
       fixedContent = `${fixesData.author_section}\n\n${content}`
     } else if (placement === 'after_intro') {
-      // Find first paragraph break and insert after it
       const firstBreak = content.indexOf('\n\n')
       if (firstBreak > 0) {
         fixedContent =
@@ -104,7 +101,6 @@ Return ONLY valid JSON:
         fixedContent = `${fixesData.author_section}\n\n${content}`
       }
     } else if (placement === 'before_conclusion') {
-      // Insert near end (before last paragraph)
       const lastBreak = content.lastIndexOf('\n\n')
       if (lastBreak > 0 && lastBreak > content.length / 2) {
         fixedContent =
@@ -119,9 +115,9 @@ Return ONLY valid JSON:
     }
 
     appliedFixes.push({
-      issue: 'E-E-A-T: Author credentials and expertise added',
-      author_section: fixesData.author_section.substring(0, 100),
-      credentials: author?.credentials || 'Established through expert positioning'
+      issue: 'E-E-A-T: Comprehensive author credentials and expertise added',
+      author_section: fixesData.author_section.substring(0, 150),
+      credentials: fixesData.expertise_areas?.join(', ') || 'Established expertise'
     })
   }
 
@@ -142,10 +138,10 @@ function detectIndustry(content: string): string {
 
   for (const [industry, words] of Object.entries(keywords)) {
     const matchCount = words.filter((w) => contentLower.includes(w.toLowerCase())).length
-    if (matchCount >= 3) {
+    if (matchCount >= 2) {
       return industry
     }
   }
 
-  return 'general'
+  return 'business'
 }
