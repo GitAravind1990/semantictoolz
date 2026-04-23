@@ -6,6 +6,7 @@ import { fixCitationIssues } from '@/lib/fixers/citations'
 import { fixEEATIssues } from '@/lib/fixers/eeat'
 import { fixSemanticIssues } from '@/lib/fixers/semantic'
 import { fixTechnicalIssues } from '@/lib/fixers/technical'
+import { fixSchemaIssues } from '@/lib/fixers/schema'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -99,6 +100,15 @@ export async function POST(req: NextRequest) {
       } catch (e) {
         console.error('Technical fixer error:', e)
       }
+    }
+
+   // Step 6: Generate Schema Markup (NEW - auto schema generation)
+    try {
+      const schemaResult = await fixSchemaIssues(optimizedContent)
+      optimizedContent = schemaResult.fixed_content
+      allAppliedFixes.push(...schemaResult.applied_fixes)
+    } catch (e) {
+      console.error('Schema generation error:', e)
     }
 
     // Calculate final metrics
