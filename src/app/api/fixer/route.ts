@@ -17,24 +17,29 @@ type AuthorProfile = {
 
 const SYSTEM = `You are an expert SEO editor. Your job is to SURGICALLY FIX specific issues in content while preserving the original article almost entirely.
 
-CRITICAL PRESERVATION RULES (failing these = failed task):
-1. The output MUST be at least 95% of the original word count. Do NOT shorten, summarize, or condense.
-2. Preserve every heading (H1, H2, H3) from the original unless an issue explicitly requires changing one.
-3. Preserve every paragraph. Only modify paragraphs affected by a reported issue. Leave untouched paragraphs exactly as written.
-4. Preserve every statistic, number, date, proper noun, named entity, and factual claim.
-5. Keep the original section order and structure.
-6. Do NOT remove entire sections. Do NOT merge paragraphs. Do NOT rewrite unaffected areas.
+const SYSTEM = `You are an expert SEO editor. Your ONLY job is to SURGICALLY FIX specific issues while preserving 100% of the original content length and structure.
+
+🚨 CRITICAL RULES (MANDATORY - FAILURE TO FOLLOW = FAILED TASK):
+1. The output MUST be AT LEAST 100% of the original word count (do not shorten even 1 character)
+2. Preserve EVERY heading, paragraph, sentence, and word from the original
+3. ONLY modify the exact sentences that have reported issues
+4. For each issue, make the MINIMUM surgical change needed
+5. When adding content (author info, schema placeholders), INSERT it without removing anything
+6. DO NOT condense, summarize, or rewrite any untouched sections
+7. DO NOT merge paragraphs
+8. DO NOT remove sections
+9. If content must grow to fix issues, that's GOOD - let it grow
 
 HOW TO FIX:
-- For each reported issue, make the MINIMUM change needed to resolve it.
-- Add new content (bylines, schema placeholders, internal link placeholders, disclaimers) where required, but do not replace existing content.
-- When adding author/reviewer info, use ONLY the author profile provided by the user. If a field is missing, OMIT it (do not invent credentials, names, or experience).
+- For each reported issue, find the exact sentence/paragraph that causes it
+- Make a minimal, surgical edit to that sentence only
+- Leave everything else byte-for-byte identical
+- When adding author/reviewer info, use ONLY the author profile provided (do not invent)
 
-OUTPUT FORMAT:
-Step 1: Write the full content as HTML. Use <h1>, <h2>, <h3>, <p>, <ul>, <li>, <strong>, <em>, <blockquote>. No markdown. No code fences.
-Step 2: On a new line, write exactly: ===FIXER_META===
-Step 3: Write this JSON:
-{"applied_fixes":[{"issue":"","fix_applied":"","location":""}],"changes_summary":"","estimated_score_improvement":0,"original_word_count":0,"new_word_count":0}`
+OUTPUT FORMAT (follow EXACTLY):
+Step 1: Write the full rewritten content as HTML. Use <h1>, <h2>, <h3>, <p>, <ul>, <li>, <strong>, <em>. NO markdown.
+Step 2: On a new line, write: ===FIXER_META===
+Step 3: Write JSON: {"applied_fixes":[{"issue":"","fix_applied":"","location":""}],"changes_summary":"","estimated_score_improvement":0,"original_word_count":0,"new_word_count":0}`
 
 function buildAuthorBlock(profile: AuthorProfile | undefined): string {
   if (!profile || (!profile.name && !profile.reviewer_name)) {
@@ -85,7 +90,7 @@ ${content.slice(0, 5000)}
 
 Apply surgical fixes. Keep everything else byte-for-byte identical where possible. Output HTML, then delimiter, then JSON meta.`
 
-    const raw = await callClaude(SYSTEM, prompt, 4000, 'claude-haiku-4-5-20251001')
+    const raw = await callClaude(SYSTEM, prompt, 5000, 'claude-haiku-4-5-20251001')
 
     const DELIM = '===FIXER_META==='
     const delimIdx = raw.indexOf(DELIM)
