@@ -62,8 +62,10 @@ export async function POST(req: NextRequest) {
 
     const raw = await callClaude(
       SYSTEM,
-      `Analyse this content:\n\n${content.slice(0, 5000)}`,
-      2000
+      `Analyse this content and categorize each issue with category and type tags:\n\n${content.slice(0, 5000)}`,
+      2000,
+      'claude-haiku-4-5-20251001',
+      0
     )
 
     const result = extractJSON(raw)

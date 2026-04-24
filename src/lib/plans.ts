@@ -8,8 +8,8 @@ export const PLAN_LIMITS: Record<Plan, number> = {
 
 export const PLAN_TOOLS: Record<Plan, string[]> = {
   FREE: ['analyse'],
-  PRO: ['analyse', 'eeat', 'rewrite', 'backlinks', 'citation', 'gap', 'queries', 'fixer', 'schema', 'optimizer'],
-  AGENCY: ['analyse', 'eeat', 'rewrite', 'backlinks', 'citation', 'gap', 'queries', 'tracker', 'local', 'serp', 'topical', 'fixer', 'schema', 'optimizer'],
+  PRO: ['analyse', 'eeat', 'rewrite', 'backlinks', 'citation', 'gap', 'queries','optimizer'],
+  AGENCY: ['analyse', 'eeat', 'rewrite', 'backlinks', 'citation', 'gap', 'queries', 'tracker', 'local', 'serp', 'topical', 'optimizer'],
 }
 
 export const PLAN_PRICES = {

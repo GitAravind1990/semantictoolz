@@ -9,8 +9,8 @@ import { ContentProvider } from '@/context/ContentContext'
 type UsageData = { plan: string; count: number; limit: number; remaining: number }
 
 const FREE_TOOLS   = ['scores','issues','entities','aicite']
-const PRO_TOOLS    = ['eeat','backlinks','rewrite','fixer','schema','citation','gap','queries','optimizer']
-const AGENCY_TOOLS = ['tracker','local','serp','topical','schema','optimizer']
+const PRO_TOOLS    = ['eeat','backlinks','rewrite','citation','gap','queries','optimizer']
+const AGENCY_TOOLS = ['tracker','local','serp','topical','optimizer']
 
 const TOOL_META: Record<string, { label: string; icon: string }> = {
   scores:              { label: 'Content Analyzer',             icon: '📊' },
@@ -20,8 +20,6 @@ const TOOL_META: Record<string, { label: string; icon: string }> = {
   eeat:                { label: 'E-E-A-T',                      icon: '🏆' },
   backlinks:           { label: 'Relevant Backlinks',           icon: '🔗' },
   rewrite:             { label: 'AI Rewrite',                   icon: '✍️' },
-  fixer:               { label: 'Issue Fixer',                  icon: '🔧' },
-  schema:    	       { label: 'Schema Generator',             icon: '📋' },
   optimizer:           { label: 'Content Optimizer',            icon: '⚡' },
   citation:            { label: 'Citation Plan',                icon: '📎' },
   gap:                 { label: 'Content Gap',                  icon: '🕳️' },
