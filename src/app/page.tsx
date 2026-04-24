@@ -5,11 +5,14 @@ const tools = [
   { icon: '📊', name: 'Content Analyzer', desc: '8-dimension score — Technical SEO, E-E-A-T, LLM Citation & more', plan: 'Free' },
   { icon: '🔍', name: 'Issues Audit', desc: 'Prioritised content issues with specific fixes', plan: 'Free' },
   { icon: '🤖', name: 'AI Cite Score', desc: 'How likely ChatGPT & Perplexity are to cite your content', plan: 'Free' },
+  { icon: '🔗', name: 'Entities', desc: 'Detect and analyze entities in your content', plan: 'Free' },
+  { icon: '⚡', name: 'Content Optimizer', desc: 'NEW — The only tool that FIXES your content issues automatically', plan: 'Pro', new: true },
   { icon: '🏆', name: 'E-E-A-T Analysis', desc: 'Deep Experience, Expertise, Authority, Trust analysis', plan: 'Pro' },
   { icon: '🔗', name: 'Relevant Backlinks', desc: 'Real site-specific link building opportunities', plan: 'Pro' },
   { icon: '✍️', name: 'AI Rewrite', desc: 'Full rewrite following Neil Patel & Brian Dean framework', plan: 'Pro' },
   { icon: '📎', name: 'Citation Plan', desc: 'Strategy to get your content cited by AI assistants', plan: 'Pro' },
   { icon: '🕳️', name: 'Content Gap', desc: 'Topics competitors cover that you don\'t', plan: 'Pro' },
+  { icon: '🔎', name: 'AI Queries', desc: 'Query suggestions for AI search optimization', plan: 'Pro' },
   { icon: '🎯', name: 'Cite Tracker', desc: 'Simulate ChatGPT & Perplexity responses for your queries', plan: 'Agency' },
   { icon: '📍', name: 'Local SEO Suite', desc: '4 tools — entities, NAP, local queries, GBP content', plan: 'Agency' },
   { icon: '📈', name: 'SERP Audit', desc: 'Competitor breakdown, root cause diagnosis, recovery plan', plan: 'Agency' },
@@ -17,12 +20,12 @@ const tools = [
 ]
 
 const testimonials = [
-  { quote: 'SemanticToolz completely changed how we approach content briefs. The AI Cite Score alone saved us weeks of guesswork — our content is now getting picked up in Google AI Overviews consistently.', name: 'Sarah R.', role: 'Head of Content · SaaS Startup, Austin TX' },
+  { quote: 'SemanticToolz completely changed how we approach content briefs. The Content Optimizer alone saves us hours — our content automatically gets fixed for E-E-A-T, citations, and schema in one click.', name: 'Sarah R.', role: 'Head of Content · SaaS Startup, Austin TX' },
   { quote: 'The Topical Authority mapper is unlike anything else. It gave me a full keyword cluster map for our niche in minutes — something that used to take our team an entire day in spreadsheets.', name: 'Mohamed K.', role: 'SEO Lead · Digital Agency, New York NY' },
   { quote: "We used to spend 3-4 hours per article on SEO research. With SemanticToolz we run an analysis in 30 seconds. Our average article score went from 48 to 79 in a month.", name: 'Priya L.', role: 'Founder · Content Studio, Los Angeles CA' },
   { quote: 'The SERP Audit and Local SEO suite together are worth the Agency plan alone. We onboarded 3 new local clients last month and ran full audits for each in under 10 minutes.', name: 'James T.', role: 'Director · Local SEO Agency, Dallas TX' },
   { quote: 'Finally a tool that understands AI search is different from traditional SEO. Traffic is up 34%.', name: 'Anika N.', role: 'Growth Manager · B2B SaaS, San Francisco CA' },
-  { quote: "I compared SemanticToolz to Surfer SEO and MarketMuse. It's faster, cheaper, and the AI citation angle is something neither offers.", name: 'Ravi V.', role: 'CEO · SEO Agency, Chicago IL' },
+  { quote: "I compared SemanticToolz to Surfer SEO and MarketMuse. It's faster, cheaper, and the Content Optimizer actually FIXES issues — something neither offers.", name: 'Ravi V.', role: 'CEO · SEO Agency, Chicago IL' },
 ]
 
 const plans = [
@@ -33,7 +36,7 @@ const plans = [
   },
   {
     name: 'Pro', price: '$19', period: 'per month', color: 'blue', featured: true,
-    features: ['50 analyses / month', 'Everything in Free', 'E-E-A-T deep analysis', 'Relevant Backlinks finder', 'AI content rewriter', 'Citation strategy engine', 'Content Gap analyzer', 'AI Query mapper'],
+    features: ['50 analyses / month', 'Everything in Free', '⚡ Content Optimizer (NEW)', 'E-E-A-T deep analysis', 'Relevant Backlinks finder', 'AI content rewriter', 'Citation strategy engine', 'Content Gap analyzer', 'AI Query mapper'],
     cta: 'Start Pro Trial', href: '/signup',
   },
   {
@@ -71,16 +74,16 @@ export default function HomePage() {
       {/* Hero */}
       <section className="mx-auto max-w-4xl px-6 pt-24 pb-20 text-center">
         <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-1.5 text-xs font-bold text-blue-700 mb-8">
-          ✨ New — Topical Authority Mapper for Agencies
+          ⚡ NEW — Content Optimizer: The Only Tool That FIXES Your Content
         </div>
         <h1 className="text-5xl font-black leading-tight tracking-tight text-slate-900 mb-6 md:text-6xl">
-          Rank Higher on Google.<br />
+          Detect Issues.<br />
           <span className="bg-gradient-to-r from-brand-600 to-purple-600 bg-clip-text text-transparent">
-            Get Cited by Every AI.
+            AI-Fix Them Automatically.
           </span>
         </h1>
         <p className="text-xl text-slate-500 max-w-2xl mx-auto mb-10 leading-relaxed">
-          SemanticToolz scores, fixes, and rewrites your content for Google and AI search — with 14 specialist tools covering content analysis, E-E-A-T, backlinks, local SEO, and topical authority.
+          SemanticToolz is the only platform that detects AND fixes your content issues — with 15 specialist tools covering content analysis, E-E-A-T, citations, local SEO, topical authority, and automated optimization.
         </p>
         <div className="flex items-center justify-center gap-4 flex-wrap">
           <Link href="/signup" className="rounded-full bg-gradient-to-r from-brand-600 to-brand-700 px-8 py-4 text-base font-extrabold text-white shadow-lg shadow-blue-200 hover:shadow-xl hover:shadow-blue-300 transition-all hover:-translate-y-0.5">
@@ -91,7 +94,7 @@ export default function HomePage() {
           </a>
         </div>
         <div className="mt-16 flex justify-center gap-12 border-t border-slate-100 pt-12 flex-wrap">
-          {[['14', 'AI-powered tools'], ['8', 'Score dimensions'], ['3', 'Plan tiers'], ['100%', 'AI-powered']].map(([n, l]) => (
+          {[['15', 'AI-powered tools'], ['8', 'Score dimensions'], ['3', 'Plan tiers'], ['100%', 'AI-powered']].map(([n, l]) => (
             <div key={l} className="text-center">
               <div className="text-3xl font-black text-slate-900">{n}</div>
               <div className="text-sm text-slate-400 mt-1">{l}</div>
@@ -138,11 +141,12 @@ export default function HomePage() {
       <section className="py-20 px-6">
         <div className="mx-auto max-w-6xl">
           <p className="text-center text-xs font-bold uppercase tracking-widest text-brand-600 mb-3">Everything you need</p>
-          <h2 className="text-4xl font-extrabold text-center tracking-tight mb-4">14 Tools. One Platform.</h2>
-          <p className="text-center text-slate-500 max-w-lg mx-auto mb-12">From content scoring to topical authority mapping — built for content teams, SEOs, and agencies.</p>
+          <h2 className="text-4xl font-extrabold text-center tracking-tight mb-4">15 Tools. One Platform.</h2>
+          <p className="text-center text-slate-500 max-w-lg mx-auto mb-12">From content scoring to topical authority mapping and AI-powered fixing — built for content teams, SEOs, and agencies.</p>
           <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-4">
             {tools.map(t => (
-              <div key={t.name} className={`rounded-2xl border p-5 transition-shadow hover:shadow-md ${t.name === 'Topical Authority' ? 'border-amber-400 bg-amber-50' : 'border-slate-200 bg-white'}`}>
+              <div key={t.name} className={`rounded-2xl border p-5 transition-shadow hover:shadow-md ${t.name === 'Content Optimizer' ? 'border-blue-500 border-2 bg-blue-50' : t.name === 'Topical Authority' ? 'border-amber-400 bg-amber-50' : 'border-slate-200 bg-white'}`}>
+                {t.new && <div className="inline-block text-xs font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full mb-2">NEW</div>}
                 <div className="text-2xl mb-3">{t.icon}</div>
                 <div className="font-bold text-sm mb-1">{t.name}</div>
                 <div className="text-xs text-slate-500 leading-relaxed mb-3">{t.desc}</div>
@@ -191,7 +195,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t border-slate-200 py-10 px-6 text-center text-sm text-slate-400">
         <div className="font-bold text-slate-700 mb-1">SemanticToolz</div>
-        <div className="mb-3">AI-powered content optimization for Google & AI search · © 2025 SemanticToolz</div>
+        <div className="mb-3">AI-powered content optimization for Google & AI search · © 2026 SemanticToolz</div>
         <div className="flex justify-center gap-6 text-xs">
           <Link href="/privacy" className="hover:text-slate-700">Privacy Policy</Link>
           <Link href="/terms" className="hover:text-slate-700">Terms of Service</Link>
