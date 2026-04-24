@@ -25,103 +25,80 @@ export async function fixEntityIssues(
   }
 
   const industry = detectIndustry(content)
-  const issuesList = entityIssues.map((i) => i.issue).join('\n')
+  const issuesList = entityIssues.slice(0, 5).map((i) => i.issue).join('\n')
 
-  const prompt = `You are editing content for the ${industry} industry.
+  const prompt = `Industry: ${industry}
 
-Content:
-${content}
+Content (first 1000 chars):
+${content.substring(0, 1000)}
 
-Entity issues to fix:
+Find ALL undefined entities in these issues:
 ${issuesList}
 
-For EVERY undefined entity/term mentioned in the issues, provide:
-1. The exact entity name
-2. A detailed, contextual definition (2-3 sentences) appropriate for ${industry}
-3. The first sentence where it appears
+For each, return: entity name, definition (2-3 sentences), where it appears.
 
-Be thorough - identify ALL undefined entities, not just a few.
+JSON only:
+{"fixes": [{"entity": "name", "definition": "definition", "location": "where"}]}`
 
-Return ONLY valid JSON:
-{
-  "fixes": [
-    {
-      "entity": "term name",
-      "definition": "detailed 2-3 sentence definition",
-      "location": "first sentence"
-    }
-  ]
-}`
-
-  const raw = await callClaude(
-    `You are a comprehensive content editor. For any industry, identify ALL undefined entities and provide detailed contextual definitions. Return ONLY JSON.`,
-    prompt,
-    3000,
-    'claude-haiku-4-5-20251001'
-  )
-
-  let fixesData: any = { fixes: [] }
   try {
+    const raw = await callClaude(
+      'Add definitions for undefined business terms. Return JSON only.',
+      prompt,
+      2000,
+      'claude-haiku-4-5-20251001'
+    )
+
+    let fixesData: any = { fixes: [] }
     const jsonMatch = raw.match(/\{[\s\S]*\}/)
     if (jsonMatch) {
       fixesData = JSON.parse(jsonMatch[0])
     }
-  } catch (e) {
-    console.error('Entity fixes parse error:', e)
-    return { fixed_content: content, applied_fixes: [] }
-  }
 
-  let fixedContent = content
-  const appliedFixes: AppliedFix[] = []
+    let fixedContent = content
+    const appliedFixes: AppliedFix[] = []
 
-  if (fixesData.fixes && Array.isArray(fixesData.fixes)) {
-    for (const fix of fixesData.fixes) {
-      if (fix.entity && fix.definition) {
-        const regex = new RegExp(`\\b${fix.entity}\\b`, 'g')
-        let count = 0
-        const originalLength = fixedContent.length
-
-        fixedContent = fixedContent.replace(regex, (match) => {
-          count++
-          if (count === 1) {
-            return `<strong>${match}</strong> (${fix.definition})`
-          }
-          return match
-        })
-
-        if (fixedContent.length > originalLength) {
-          appliedFixes.push({
-            issue: `Entity definition: ${fix.entity}`,
-            entity: fix.entity,
-            definition: fix.definition,
-            location: fix.location || 'First mention'
+    if (fixesData.fixes && Array.isArray(fixesData.fixes)) {
+      for (const fix of fixesData.fixes) {
+        if (fix.entity && fix.definition) {
+          const regex = new RegExp(`\\b${fix.entity}\\b`, 'g')
+          let count = 0
+          fixedContent = fixedContent.replace(regex, (match) => {
+            count++
+            return count === 1 ? `<strong>${match}</strong> (${fix.definition})` : match
           })
+          if (count > 0) {
+            appliedFixes.push({
+              issue: `Entity: ${fix.entity}`,
+              entity: fix.entity,
+              definition: fix.definition,
+              location: fix.location || 'Content'
+            })
+          }
         }
       }
     }
-  }
 
-  return { fixed_content: fixedContent, applied_fixes: appliedFixes }
+    return { fixed_content: fixedContent, applied_fixes: appliedFixes }
+  } catch (e) {
+    return { fixed_content: content, applied_fixes: [] }
+  }
 }
 
 function detectIndustry(content: string): string {
   const keywords: Record<string, string[]> = {
-    'software/SaaS': ['API', 'platform', 'cloud', 'database', 'integration', 'dashboard', 'deployment', 'saas'],
-    'restaurant/hospitality': ['menu', 'chef', 'cuisine', 'dish', 'ingredients', 'reservation', 'dining', 'restaurant'],
-    'healthcare/medical': ['patient', 'treatment', 'diagnosis', 'surgery', 'doctor', 'hospital', 'symptom', 'medical'],
-    'real estate': ['property', 'listing', 'mortgage', 'bedroom', 'price', 'agent', 'inspection', 'real estate'],
-    'fashion/e-commerce': ['product', 'design', 'style', 'collection', 'material', 'color', 'size', 'shop'],
-    'fitness/coaching': ['workout', 'training', 'coach', 'exercise', 'client', 'goal', 'progress', 'fitness'],
+    'software': ['API', 'platform', 'cloud', 'database', 'integration'],
+    'restaurant': ['menu', 'chef', 'cuisine', 'dish', 'ingredients'],
+    'medical': ['patient', 'treatment', 'doctor', 'surgery', 'hospital'],
+    'real estate': ['property', 'listing', 'mortgage', 'bedroom'],
+    'ecommerce': ['product', 'price', 'design', 'material'],
+    'coaching': ['coach', 'training', 'client', 'goal'],
   }
 
   const contentLower = content.toLowerCase()
-
   for (const [industry, words] of Object.entries(keywords)) {
-    const matchCount = words.filter((w) => contentLower.includes(w.toLowerCase())).length
-    if (matchCount >= 2) {
+    if (words.filter((w) => contentLower.includes(w.toLowerCase())).length >= 2) {
       return industry
     }
   }
-
   return 'business'
 }
