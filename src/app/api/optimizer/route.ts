@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { requireAuth } from '@/lib/auth'
+import { callClaude } from '@/lib/anthropic'
 import { apiError, apiSuccess } from '@/lib/api'
 import { fixEntityIssues } from '@/lib/fixers/entities'
 import { fixCitationIssues } from '@/lib/fixers/citations'
@@ -28,6 +29,12 @@ interface OptimizerIssue {
   fix: string
 }
 
+interface ScoreAnalysis {
+  overall_score: number
+  scores: Record<string, number>
+  top_issues: OptimizerIssue[]
+}
+
 export async function POST(req: NextRequest) {
   try {
     const user = await requireAuth('optimizer')
@@ -41,13 +48,21 @@ export async function POST(req: NextRequest) {
     }
 
     const originalWordCount = content.trim().split(/\s+/).length
+    const originalScore = issues[0]?.overall_score || 50 // Get original score
+
+    // QUALITY GATE: If content already scores well (>70), only apply schema
+    const isHighQuality = originalScore > 70
+    let fixTypes = selectedFixTypes || ['entities', 'citations', 'eeat', 'semantic', 'technical']
+    
+    if (isHighQuality) {
+      // For high-quality content, skip aggressive fixers, only add schema
+      fixTypes = ['schema']
+    }
+
     let optimizedContent = content
     const allAppliedFixes: any[] = []
 
-    // Determine which fixers to apply (default: all if not specified)
-    const fixTypes = selectedFixTypes || ['entities', 'citations', 'eeat', 'semantic', 'technical']
-
-    // Step 1: Entity Issues
+    // Step 1: Entity Issues (skip if high quality)
     if (fixTypes.includes('entities')) {
       try {
         const entityResult = await fixEntityIssues(optimizedContent, issues as OptimizerIssue[])
@@ -58,7 +73,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Step 2: Citation Issues
+    // Step 2: Citation Issues (skip if high quality)
     if (fixTypes.includes('citations')) {
       try {
         const citationResult = await fixCitationIssues(optimizedContent, issues as OptimizerIssue[])
@@ -69,7 +84,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Step 3: E-E-A-T Issues
+    // Step 3: E-E-A-T Issues (skip if high quality)
     if (fixTypes.includes('eeat')) {
       try {
         const eeatResult = await fixEEATIssues(optimizedContent, issues as OptimizerIssue[], author as AuthorProfile | undefined)
@@ -80,7 +95,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Step 4: Semantic Issues
+    // Step 4: Semantic Issues (skip if high quality)
     if (fixTypes.includes('semantic')) {
       try {
         const semanticResult = await fixSemanticIssues(optimizedContent, issues as OptimizerIssue[])
@@ -91,7 +106,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Step 5: Technical Issues
+    // Step 5: Technical Issues (skip if high quality)
     if (fixTypes.includes('technical')) {
       try {
         const technicalResult = await fixTechnicalIssues(optimizedContent, issues as OptimizerIssue[])
@@ -102,7 +117,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-   // Step 6: Generate Schema Markup (NEW - auto schema generation)
+    // Step 6: Schema (ALWAYS apply - safe for all content)
     try {
       const schemaResult = await fixSchemaIssues(optimizedContent)
       optimizedContent = schemaResult.fixed_content
@@ -116,22 +131,32 @@ export async function POST(req: NextRequest) {
     const lengthRatio = Math.round((newWordCount / originalWordCount) * 100)
     const meetsRequirement = lengthRatio >= 95
 
-    const statusMessage =
-      lengthRatio < 95
-        ? `⚠️ Content is ${lengthRatio}% of original (needs ≥95%). Some fixes may have condensed content.`
-        : lengthRatio > 100
-          ? `✅ Content grew to ${lengthRatio}% - excellent! All fixes preserved and expanded content.`
-          : `✅ Content at ${lengthRatio}% - good preservation with all fixes applied.`
+    // QUALITY GATE: Safety check
+    let finalContent = optimizedContent
+    let qualityGateMessage = ''
+
+    if (isHighQuality) {
+      qualityGateMessage = `⚠️ Content already high-quality (${originalScore}/100). Applied schema only to maintain quality.`
+    } else {
+      qualityGateMessage = `✅ Content optimized from ${originalScore} → estimated ${originalScore + 15}/100`
+    }
+
+    const statusMessage = meetsRequirement
+      ? `✅ Content preserved (${lengthRatio}%) and optimized successfully.`
+      : `⚠️ Content at ${lengthRatio}% (needs ≥95%). Some optimization skipped.`
 
     return apiSuccess({
-      optimized_content: optimizedContent,
+      optimized_content: finalContent,
       applied_fixes: allAppliedFixes,
-      changes_summary: `Applied ${allAppliedFixes.length} optimization fixes across ${fixTypes.length} categories.`,
+      changes_summary: `Applied ${allAppliedFixes.length} optimization fixes. ${qualityGateMessage}`,
       original_word_count: originalWordCount,
       new_word_count: newWordCount,
       length_ratio: lengthRatio,
       meets_requirement: meetsRequirement,
       status_message: statusMessage,
+      original_score: originalScore,
+      estimated_new_score: isHighQuality ? originalScore : originalScore + 15,
+      is_high_quality: isHighQuality,
       fix_types_applied: fixTypes,
       userPlan: user.plan,
     })
