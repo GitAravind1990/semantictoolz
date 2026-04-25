@@ -12,14 +12,14 @@ const PLANS = [
     cta: 'Get Started Free', href: '/signup',
   },
   {
-    name: 'Pro', price: { monthly: '$19', annual: '$15' }, period: '/month',
+    name: 'Pro', price: { monthly: '$19', annual: '$15.83' }, period: '/month',
     color: 'blue', featured: true,
     variantId: { monthly: process.env.NEXT_PUBLIC_LS_VARIANT_PRO_MONTHLY, annual: process.env.NEXT_PUBLIC_LS_VARIANT_PRO_ANNUAL },
     features: ['50 analyses / month', 'Everything in Free', 'E-E-A-T deep analysis', 'Relevant Backlinks finder', 'AI content rewriter', 'Citation strategy engine', 'Content Gap analyzer', 'AI Query mapper'],
     cta: 'Start Pro',
   },
   {
-    name: 'Agency', price: { monthly: '$49', annual: '$39' }, period: '/month',
+    name: 'Agency', price: { monthly: '$49', annual: '$40.83' }, period: '/month',
     color: 'amber',
     variantId: { monthly: process.env.NEXT_PUBLIC_LS_VARIANT_AGENCY_MONTHLY, annual: process.env.NEXT_PUBLIC_LS_VARIANT_AGENCY_ANNUAL },
     features: ['200 analyses / month', 'Everything in Pro', 'AI Citation Tracker', 'Local SEO Suite (4 tools)', 'SERP Competitor Audit', 'Topical Authority Mapper ★'],
@@ -113,7 +113,7 @@ export default function PricingPage() {
         </div>
 
         <p className="text-center text-xs text-slate-400 mt-10">
-          Payments processed by Lemon Squeezy · Cancel anytime · No setup fees
+          Payments processed by Lemon Squeezy
         </p>
       </div>
     </div>
