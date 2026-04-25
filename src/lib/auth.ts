@@ -22,7 +22,6 @@ export class AuthError extends Error {
  */
 export async function requireAuth(tool: string): Promise<AuthedUser> {
   const { userId: clerkId } = await auth()
-
   if (!clerkId) {
     throw new AuthError(401, 'Not authenticated')
   }
@@ -54,6 +53,7 @@ export async function requireAuth(tool: string): Promise<AuthedUser> {
   const usage = await prisma.usage.findUnique({
     where: { userId_month: { userId: user.id, month } },
   })
+
   const currentCount = usage?.count ?? 0
   const limit = PLAN_LIMITS[user.plan]
 
