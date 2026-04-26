@@ -3,7 +3,6 @@
 import { useContent } from '@/context/ContentContext'
 import Link from 'next/link'
 import { Card, Badge, EmptyState } from '@/components/ui'
-import { exportIssuesCSV, exportIssuesPDF } from '@/lib/export'
 
 export default function IssuesPage() {
   const { analysisResult } = useContent()
@@ -29,10 +28,10 @@ export default function IssuesPage() {
             </Badge>
             {issues.length > 0 && (
               <Link
-                href="/dashboard/fixer"
+                href="/dashboard/optimizer"
                 className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 px-3 py-1.5 text-xs font-bold text-white"
               >
-                🔧 Fix these issues →
+                ⚡ Optimize content →
               </Link>
             )}
           </div>
