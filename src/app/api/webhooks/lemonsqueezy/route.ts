@@ -29,21 +29,21 @@ export async function POST(req: NextRequest) {
 
       // Send transactional emails
       const attrs = body.data?.attributes ?? {}
-      const customData = body.data?.meta?.custom_data ?? {}
+      const customData = body.meta?.custom_data ?? {}
       const userId = customData.user_id as string | undefined
 
       if (userId) {
         const user = await prisma.user.findUnique({ where: { id: userId } })
         if (user) {
           const variantId = String(
-            (attrs.first_subscription_item as Record<string,unknown>)?.variant_id ?? attrs.variant_id ?? ''
+            (attrs.first_subscription_item as Record<string, unknown>)?.variant_id ?? attrs.variant_id ?? ''
           )
           const plan = getPlanFromVariant(variantId)
           const planLabel = plan === 'AGENCY' ? 'Agency' : 'Pro'
           const amount = plan === 'AGENCY' ? '$49/month' : '$19/month'
 
           if (eventName === 'subscription_created') {
-            await sendSubscriptionEmail(user.email, planLabel as 'Pro'|'Agency', amount)
+            await sendSubscriptionEmail(user.email, planLabel as 'Pro' | 'Agency', amount)
           } else if (eventName === 'subscription_cancelled' || eventName === 'subscription_expired') {
             const accessUntil = attrs.ends_at
               ? new Date(attrs.ends_at as string).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
