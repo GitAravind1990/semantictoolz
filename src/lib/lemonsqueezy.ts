@@ -15,13 +15,12 @@ function lsHeaders(): Record<string, string> {
   return headers
 }
 
-// Map LS variant IDs → Plan
 function buildVariantMap(): Record<string, Plan> {
   return {
-    [process.env.LS_VARIANT_PRO_MONTHLY    ?? '']: Plan.PRO,
-    [process.env.LS_VARIANT_PRO_ANNUAL     ?? '']: Plan.PRO,
+    [process.env.LS_VARIANT_PRO_MONTHLY ?? '']: Plan.PRO,
+    [process.env.LS_VARIANT_PRO_ANNUAL ?? '']: Plan.PRO,
     [process.env.LS_VARIANT_AGENCY_MONTHLY ?? '']: Plan.AGENCY,
-    [process.env.LS_VARIANT_AGENCY_ANNUAL  ?? '']: Plan.AGENCY,
+    [process.env.LS_VARIANT_AGENCY_ANNUAL ?? '']: Plan.AGENCY,
   }
 }
 
@@ -29,10 +28,6 @@ export function getPlanFromVariant(variantId: string): Plan {
   return buildVariantMap()[variantId] ?? Plan.FREE
 }
 
-/**
- * Create a Lemon Squeezy checkout URL
- * Uses the REST API directly — no SDK needed
- */
 export async function createCheckout(
   variantId: string,
   userId: string,
@@ -42,7 +37,7 @@ export async function createCheckout(
   if (!process.env.LEMONSQUEEZY_API_KEY) {
     throw new Error('Lemon Squeezy API key not configured')
   }
-  
+
   const res = await fetch(`${LS_API}/checkouts`, {
     method: 'POST',
     headers: lsHeaders(),
@@ -62,8 +57,8 @@ export async function createCheckout(
           },
         },
         relationships: {
-          store:   { data: { type: 'stores',   id: process.env.LEMONSQUEEZY_STORE_ID } },
-          variant: { data: { type: 'variants',  id: variantId } },
+          store: { data: { type: 'stores', id: process.env.LEMONSQUEEZY_STORE_ID } },
+          variant: { data: { type: 'variants', id: variantId } },
         },
       },
     }),
@@ -78,15 +73,12 @@ export async function createCheckout(
   return data.data.attributes.url as string
 }
 
-/**
- * Verify Lemon Squeezy webhook HMAC signature
- */
 export function verifyWebhookSignature(payload: string, signature: string): boolean {
   if (!process.env.LEMONSQUEEZY_WEBHOOK_SECRET) {
     return false
   }
   const secret = process.env.LEMONSQUEEZY_WEBHOOK_SECRET
-  const hmac   = crypto.createHmac('sha256', secret)
+  const hmac = crypto.createHmac('sha256', secret)
   const digest = hmac.update(payload).digest('hex')
   try {
     return crypto.timingSafeEqual(Buffer.from(digest), Buffer.from(signature))
@@ -95,32 +87,37 @@ export function verifyWebhookSignature(payload: string, signature: string): bool
   }
 }
 
-/**
- * Handle incoming Lemon Squeezy webhook events
- */
 export async function handleWebhookEvent(
   eventName: string,
-  data: Record<string, unknown>
+  data: Record<string, unknown>,
+  customDataParam?: Record<string, unknown>
 ) {
-  const attrs      = (data.attributes ?? {}) as Record<string, unknown>
-  const meta       = (data.meta        ?? {}) as Record<string, unknown>
-  const customData = (meta.custom_data  ?? {}) as Record<string, unknown>
+  const attrs = (data.attributes ?? {}) as Record<string, unknown>
+  const customData = customDataParam ?? ((data.meta as any)?.custom_data ?? {}) as Record<string, unknown>
 
-  const userId      = customData.user_id as string | undefined
-  const lsSubId     = String(data.id ?? '')
-  const lsCustomerId= String(attrs.customer_id ?? '')
+  const userId = customData.user_id as string | undefined
+  const lsSubId = String(data.id ?? '')
+  const lsCustomerId = String(attrs.customer_id ?? '')
 
-  // Variant ID lives in first_subscription_item or directly on attrs
-  const firstItem   = (attrs.first_subscription_item ?? {}) as Record<string, unknown>
-  const variantId   = String(firstItem.variant_id ?? attrs.variant_id ?? '')
-  const plan        = getPlanFromVariant(variantId)
+  const firstItem = (attrs.first_subscription_item ?? {}) as Record<string, unknown>
+  const variantId = String(firstItem.variant_id ?? attrs.variant_id ?? '')
+  const plan = getPlanFromVariant(variantId)
+
+  console.log(`[Webhook] Event: ${eventName}, UserId: ${userId}, VariantId: ${variantId}, Plan: ${plan}`)
 
   switch (eventName) {
     case 'subscription_created':
     case 'subscription_updated': {
-      if (!userId) break
+      if (!userId) {
+        console.error('[Webhook] No userId in custom_data')
+        break
+      }
+
       const user = await prisma.user.findUnique({ where: { id: userId } })
-      if (!user) break
+      if (!user) {
+        console.error(`[Webhook] User not found: ${userId}`)
+        break
+      }
 
       await prisma.$transaction([
         prisma.user.update({
@@ -128,11 +125,20 @@ export async function handleWebhookEvent(
           data: { plan },
         }),
         prisma.subscription.upsert({
-          where:  { lsSubscriptionId: lsSubId },
-          create: { userId, lsSubscriptionId: lsSubId, lsCustomerId, lsVariantId: variantId, status: 'ACTIVE', plan },
+          where: { lsSubscriptionId: lsSubId },
+          create: {
+            userId,
+            lsSubscriptionId: lsSubId,
+            lsCustomerId,
+            lsVariantId: variantId,
+            status: 'ACTIVE',
+            plan,
+          },
           update: { status: 'ACTIVE', plan, lsVariantId: variantId },
         }),
       ])
+
+      console.log(`[Webhook] User ${userId} upgraded to ${plan}`)
       break
     }
 
@@ -140,6 +146,7 @@ export async function handleWebhookEvent(
     case 'subscription_expired': {
       const sub = await prisma.subscription.findUnique({ where: { lsSubscriptionId: lsSubId } })
       if (!sub) break
+
       await prisma.$transaction([
         prisma.user.update({ where: { id: sub.userId }, data: { plan: Plan.FREE } }),
         prisma.subscription.update({
@@ -156,9 +163,10 @@ export async function handleWebhookEvent(
     case 'subscription_payment_failed': {
       const sub = await prisma.subscription.findUnique({ where: { lsSubscriptionId: lsSubId } })
       if (!sub) break
+
       await prisma.subscription.update({
         where: { lsSubscriptionId: lsSubId },
-        data:  { status: 'PAST_DUE' },
+        data: { status: 'PAST_DUE' },
       })
       break
     }

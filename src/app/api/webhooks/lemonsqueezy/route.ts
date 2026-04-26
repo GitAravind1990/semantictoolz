@@ -20,12 +20,16 @@ export async function POST(req: NextRequest) {
     console.log(`[Webhook] Event: ${eventName}`)
 
     const supportedEvents = [
-      'subscription_created', 'subscription_updated',
-      'subscription_cancelled', 'subscription_expired', 'subscription_payment_failed',
+      'subscription_created',
+      'subscription_updated',
+      'subscription_cancelled',
+      'subscription_expired',
+      'subscription_payment_failed',
     ]
 
     if (supportedEvents.includes(eventName)) {
-      await handleWebhookEvent(eventName, body.data)
+      // Pass custom_data from top-level meta
+      await handleWebhookEvent(eventName, body.data, body.meta?.custom_data)
 
       // Send transactional emails
       const attrs = body.data?.attributes ?? {}
@@ -46,7 +50,11 @@ export async function POST(req: NextRequest) {
             await sendSubscriptionEmail(user.email, planLabel as 'Pro' | 'Agency', amount)
           } else if (eventName === 'subscription_cancelled' || eventName === 'subscription_expired') {
             const accessUntil = attrs.ends_at
-              ? new Date(attrs.ends_at as string).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+              ? new Date(attrs.ends_at as string).toLocaleDateString('en-US', {
+                  month: 'long',
+                  day: 'numeric',
+                  year: 'numeric',
+                })
               : undefined
             await sendCancelledEmail(user.email, planLabel, undefined, accessUntil)
           }
