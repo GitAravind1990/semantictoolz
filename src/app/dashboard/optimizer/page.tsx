@@ -406,11 +406,12 @@ export default function OptimizerPage() {
                     Maybe Later
                   </button>
                   
+                  <Link
                     href="/pricing"
                     className="flex-1 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:opacity-90 text-white text-sm font-bold rounded-xl text-center"
                   >
                     Upgrade Now →
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>
