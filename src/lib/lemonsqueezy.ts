@@ -74,12 +74,8 @@ export async function createCheckout(
 }
 
 export function verifyWebhookSignature(payload: string, signature: string): boolean {
-  if (!process.env.LEMONSQUEEZY_WEBHOOK_SECRET) {
-    return false
-  }
-export function verifyWebhookSignature(payload: string, signature: string): boolean {
   const secret = process.env.LEMONSQUEEZY_WEBHOOK_SECRET
-  
+
   if (!secret || typeof secret !== 'string' || secret.length === 0) {
     console.error('[Webhook] LEMONSQUEEZY_WEBHOOK_SECRET is not set or empty')
     return false
@@ -96,12 +92,6 @@ export function verifyWebhookSignature(payload: string, signature: string): bool
     return crypto.timingSafeEqual(Buffer.from(digest), Buffer.from(signature))
   } catch (e) {
     console.error('[Webhook] Signature verification error:', e)
-    return false
-  }
-}
-  try {
-    return crypto.timingSafeEqual(Buffer.from(digest), Buffer.from(signature))
-  } catch {
     return false
   }
 }
