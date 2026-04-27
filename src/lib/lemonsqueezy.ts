@@ -73,16 +73,16 @@ export async function createCheckout(
   return data.data.attributes.url as string
 }
 
-export function verifyWebhookSignature(payload: string, signature: string): boolean {
+  export function verifyWebhookSignature(payload: string, signature: string): boolean {
   const secret = process.env.LEMONSQUEEZY_WEBHOOK_SECRET
+
+  console.log('[Webhook Debug] Secret type:', typeof secret)
+  console.log('[Webhook Debug] Secret length:', secret?.length || 0)
+  console.log('[Webhook Debug] Signature provided:', !!signature)
+  console.log('[Webhook Debug] All env keys with LEMON:', Object.keys(process.env).filter(k => k.includes('LEMON')))
 
   if (!secret || typeof secret !== 'string' || secret.length === 0) {
     console.error('[Webhook] LEMONSQUEEZY_WEBHOOK_SECRET is not set or empty')
-    return false
-  }
-
-  if (!signature || typeof signature !== 'string') {
-    console.error('[Webhook] Signature is missing or invalid')
     return false
   }
 
