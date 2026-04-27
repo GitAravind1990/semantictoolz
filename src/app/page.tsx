@@ -32,17 +32,17 @@ const plans = [
   {
     name: 'Free', price: '$0', period: 'forever', color: 'gray',
     features: ['3 analyses / month', '8-dimension content score', 'Issues audit', 'Entity detection', 'AI Cite Score'],
-    cta: 'Get Started Free', href: '/signup',
+    cta: 'Get Started Free', signedOutHref: '/signup', signedInHref: '/dashboard',
   },
   {
     name: 'Pro', price: '$19', period: 'per month', color: 'blue', featured: true,
     features: ['50 analyses / month', 'Everything in Free', '⚡ Content Optimizer (NEW)', 'E-E-A-T deep analysis', 'Relevant Backlinks finder', 'AI content rewriter', 'Citation strategy engine', 'Content Gap analyzer', 'AI Query mapper'],
-    cta: 'Start Pro Trial', href: '/signup',
+    cta: 'Start Pro Trial', signedOutHref: '/signup', signedInHref: '/pricing',
   },
   {
     name: 'Agency', price: '$49', period: 'per month', color: 'amber',
     features: ['200 analyses / month', 'Everything in Pro', 'AI Citation Tracker', 'Local SEO Suite (4 tools)', 'SERP Competitor Audit', 'Topical Authority Mapper ★'],
-    cta: 'Start Agency Trial', href: '/signup',
+    cta: 'Start Agency Trial', signedOutHref: '/signup', signedInHref: '/pricing',
   },
 ]
 
@@ -86,9 +86,16 @@ export default function HomePage() {
           SemanticToolz is the only platform that detects AND fixes your content issues — with 15 specialist tools covering content analysis, E-E-A-T, citations, local SEO, topical authority, and automated optimization.
         </p>
         <div className="flex items-center justify-center gap-4 flex-wrap">
-          <Link href="/signup" className="rounded-full bg-gradient-to-r from-brand-600 to-brand-700 px-8 py-4 text-base font-extrabold text-white shadow-lg shadow-blue-200 hover:shadow-xl hover:shadow-blue-300 transition-all hover:-translate-y-0.5">
-            Start Analysing Free →
-          </Link>
+          <SignedOut>
+            <Link href="/signup" className="rounded-full bg-gradient-to-r from-brand-600 to-brand-700 px-8 py-4 text-base font-extrabold text-white shadow-lg shadow-blue-200 hover:shadow-xl hover:shadow-blue-300 transition-all hover:-translate-y-0.5">
+              Start Analysing Free →
+            </Link>
+          </SignedOut>
+          <SignedIn>
+            <Link href="/dashboard" className="rounded-full bg-gradient-to-r from-brand-600 to-brand-700 px-8 py-4 text-base font-extrabold text-white shadow-lg shadow-blue-200 hover:shadow-xl hover:shadow-blue-300 transition-all hover:-translate-y-0.5">
+              Open Dashboard →
+            </Link>
+          </SignedIn>
           <a href="#pricing" className="rounded-full border-2 border-slate-300 px-7 py-4 text-base font-bold text-slate-700 hover:border-brand-600 transition-colors">
             See Pricing
           </a>
@@ -181,11 +188,20 @@ export default function HomePage() {
                     <span>{f}</span>
                   </div>
                 ))}
-                <Link href={p.href} className={`mt-6 block w-full rounded-xl py-3 text-center text-sm font-extrabold transition-opacity hover:opacity-90 ${
-                  p.color === 'blue' ? 'bg-brand-600 text-white' :
-                  p.color === 'amber' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white' :
-                  'bg-slate-100 text-slate-700'
-                }`}>{p.cta}</Link>
+                <SignedOut>
+                  <Link href={p.signedOutHref} className={`mt-6 block w-full rounded-xl py-3 text-center text-sm font-extrabold transition-opacity hover:opacity-90 ${
+                    p.color === 'blue' ? 'bg-brand-600 text-white' :
+                    p.color === 'amber' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white' :
+                    'bg-slate-100 text-slate-700'
+                  }`}>{p.cta}</Link>
+                </SignedOut>
+                <SignedIn>
+                  <Link href={p.signedInHref} className={`mt-6 block w-full rounded-xl py-3 text-center text-sm font-extrabold transition-opacity hover:opacity-90 ${
+                    p.color === 'blue' ? 'bg-brand-600 text-white' :
+                    p.color === 'amber' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white' :
+                    'bg-slate-100 text-slate-700'
+                  }`}>{p.cta}</Link>
+                </SignedIn>
               </div>
             ))}
           </div>
