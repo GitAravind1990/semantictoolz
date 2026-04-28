@@ -10,6 +10,11 @@ export async function POST(req: NextRequest) {
     const payload = await req.text()
     const signature = req.headers.get('x-signature') ?? ''
 
+    console.log('[LS-Webhook] POST received — VERCEL_ENV:', process.env.VERCEL_ENV ?? '(not set)')
+    console.log('[LS-Webhook] webhook secret set at route entry:', !!process.env.LEMONSQUEEZY_WEBHOOK_SECRET)
+    console.log('[LS-Webhook] x-signature header:', signature ? `${signature.slice(0, 10)}...` : '(empty)')
+    console.log('[LS-Webhook] content-type:', req.headers.get('content-type'))
+
     if (!verifyWebhookSignature(payload, signature)) {
       console.error('[Webhook] Invalid signature')
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })

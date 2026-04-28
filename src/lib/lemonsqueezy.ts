@@ -73,25 +73,51 @@ export async function createCheckout(
   return data.data.attributes.url as string
 }
 
-  export function verifyWebhookSignature(payload: string, signature: string): boolean {
+export function verifyWebhookSignature(payload: string, signature: string): boolean {
   const secret = process.env.LEMONSQUEEZY_WEBHOOK_SECRET
 
-  console.log('[Webhook Debug] Secret type:', typeof secret)
-  console.log('[Webhook Debug] Secret length:', secret?.length || 0)
-  console.log('[Webhook Debug] Signature provided:', !!signature)
-  console.log('[Webhook Debug] All env keys with LEMON:', Object.keys(process.env).filter(k => k.includes('LEMON')))
+  // --- deep diagnostic dump ---
+  console.log('[LS-Webhook] === verifyWebhookSignature ===')
+  console.log('[LS-Webhook] VERCEL_ENV:', process.env.VERCEL_ENV ?? '(not set)')
+  console.log('[LS-Webhook] NODE_ENV:', process.env.NODE_ENV)
+  console.log('[LS-Webhook] secret defined:', secret !== undefined)
+  console.log('[LS-Webhook] secret typeof:', typeof secret)
+  console.log('[LS-Webhook] secret raw length:', secret?.length ?? 'n/a')
+  console.log('[LS-Webhook] secret trimmed length:', secret?.trim().length ?? 'n/a')
+  console.log('[LS-Webhook] secret has leading/trailing whitespace:', secret !== secret?.trim())
+  console.log('[LS-Webhook] secret preview:', secret ? `${secret.slice(0, 4)}...${secret.slice(-4)}` : '(none)')
+  console.log('[LS-Webhook] LEMON* env keys:', Object.keys(process.env).filter(k => k.includes('LEMON')))
+  console.log('[LS-Webhook] key in Object.keys:', Object.keys(process.env).includes('LEMONSQUEEZY_WEBHOOK_SECRET'))
+  console.log('[LS-Webhook] signature defined:', !!signature)
+  console.log('[LS-Webhook] signature length:', signature.length)
+  console.log('[LS-Webhook] signature preview:', signature ? `${signature.slice(0, 10)}...` : '(none)')
+  console.log('[LS-Webhook] payload length:', payload.length)
 
-  if (!secret || typeof secret !== 'string' || secret.length === 0) {
-    console.error('[Webhook] LEMONSQUEEZY_WEBHOOK_SECRET is not set or empty')
+  const effectiveSecret = secret?.trim()
+
+  if (!effectiveSecret) {
+    console.error('[LS-Webhook] FATAL: LEMONSQUEEZY_WEBHOOK_SECRET is missing or blank')
+    console.error('[LS-Webhook] All env keys:', Object.keys(process.env).sort().join(', '))
     return false
   }
 
   try {
-    const hmac = crypto.createHmac('sha256', secret)
+    const hmac = crypto.createHmac('sha256', effectiveSecret)
     const digest = hmac.update(payload).digest('hex')
-    return crypto.timingSafeEqual(Buffer.from(digest), Buffer.from(signature))
+    console.log('[LS-Webhook] computed digest length:', digest.length)
+    console.log('[LS-Webhook] computed digest preview:', `${digest.slice(0, 10)}...`)
+    console.log('[LS-Webhook] provided sig length:', signature.length)
+
+    if (digest.length !== signature.length) {
+      console.error(`[LS-Webhook] length mismatch — digest: ${digest.length}, signature: ${signature.length}`)
+      return false
+    }
+
+    const match = crypto.timingSafeEqual(Buffer.from(digest), Buffer.from(signature))
+    console.log('[LS-Webhook] signature match:', match)
+    return match
   } catch (e) {
-    console.error('[Webhook] Signature verification error:', e)
+    console.error('[LS-Webhook] verification threw:', e)
     return false
   }
 }
