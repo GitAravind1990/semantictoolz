@@ -7,21 +7,21 @@ import { Button } from '@/components/ui'
 const PLANS = [
   {
     name: 'Free', price: { monthly: '$0', annual: '$0' }, period: 'forever',
-    color: 'gray', variantId: null,
+    color: 'gray', productId: null,
     features: ['3 analyses / month', '8-dimension content score', 'Issues audit', 'Entity detection', 'AI Cite Score'],
     cta: 'Get Started Free', href: '/signup',
   },
   {
     name: 'Pro', price: { monthly: '$19', annual: '$15.83' }, period: '/month',
     color: 'blue', featured: true,
-    variantId: { monthly: process.env.NEXT_PUBLIC_LS_VARIANT_PRO_MONTHLY, annual: process.env.NEXT_PUBLIC_LS_VARIANT_PRO_ANNUAL },
+    productId: { monthly: process.env.NEXT_PUBLIC_CREEM_PRODUCT_PRO_MONTHLY, annual: process.env.NEXT_PUBLIC_CREEM_PRODUCT_PRO_ANNUAL },
     features: ['50 analyses / month', 'Everything in Free', 'E-E-A-T deep analysis', 'Relevant Backlinks finder', 'AI content rewriter', 'Citation strategy engine', 'Content Gap analyzer', 'AI Query mapper'],
     cta: 'Start Pro',
   },
   {
     name: 'Agency', price: { monthly: '$49', annual: '$40.83' }, period: '/month',
     color: 'amber',
-    variantId: { monthly: process.env.NEXT_PUBLIC_LS_VARIANT_AGENCY_MONTHLY, annual: process.env.NEXT_PUBLIC_LS_VARIANT_AGENCY_ANNUAL },
+    productId: { monthly: process.env.NEXT_PUBLIC_CREEM_PRODUCT_AGENCY_MONTHLY, annual: process.env.NEXT_PUBLIC_CREEM_PRODUCT_AGENCY_ANNUAL },
     features: ['200 analyses / month', 'Everything in Pro', 'AI Citation Tracker', 'Local SEO Suite (4 tools)', 'SERP Competitor Audit', 'Topical Authority Mapper ★'],
     cta: 'Start Agency',
   },
@@ -32,18 +32,18 @@ export default function PricingPage() {
   const [loading, setLoading] = useState<string | null>(null)
 
   async function handleCheckout(plan: typeof PLANS[0]) {
-    if (!plan.variantId || plan.href) {
+    if (!plan.productId || plan.href) {
       if (plan.href) window.location.href = plan.href
       return
     }
-    const variantId = plan.variantId[billing]
-    if (!variantId) return
+    const productId = plan.productId[billing]
+    if (!productId) return
     setLoading(plan.name)
     try {
       const r = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ variantId }),
+        body: JSON.stringify({ productId }),
       })
       const d = await r.json()
       if (!r.ok) throw new Error(d.error)
@@ -113,7 +113,7 @@ export default function PricingPage() {
         </div>
 
         <p className="text-center text-xs text-slate-400 mt-10">
-          Payments processed by Lemon Squeezy
+          Payments processed by Creem
         </p>
       </div>
     </div>

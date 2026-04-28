@@ -36,22 +36,22 @@ model User {
 }
 
 model Subscription {
-  id              String             @id @default(cuid())
-  userId          String             @unique
-  lsSubscriptionId String            @unique
-  lsCustomerId    String
-  lsVariantId     String
-  lsOrderId       String?
-  status          SubscriptionStatus @default(ACTIVE)
-  plan            Plan
-  currentPeriodEnd DateTime?
-  cancelledAt     DateTime?
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  creemSubscriptionId  String             @unique
+  creemCustomerId      String
+  creemProductId       String
+  creemOrderId         String?
+  status               SubscriptionStatus @default(ACTIVE)
+  plan                 Plan
+  currentPeriodEnd     DateTime?
+  cancelledAt          DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([lsSubscriptionId])
+  @@index([creemSubscriptionId])
   @@index([userId])
 }
 
