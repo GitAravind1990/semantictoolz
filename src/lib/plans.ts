@@ -13,10 +13,10 @@ export const PLAN_TOOLS: Record<Plan, string[]> = {
 }
 
 export const PLAN_PRICES = {
-  PRO_MONTHLY:     process.env.CREEM_PRODUCT_PRO_MONTHLY!,
-  PRO_ANNUAL:      process.env.CREEM_PRODUCT_PRO_ANNUAL!,
-  AGENCY_MONTHLY:  process.env.CREEM_PRODUCT_AGENCY_MONTHLY!,
-  AGENCY_ANNUAL:   process.env.CREEM_PRODUCT_AGENCY_ANNUAL!,
+  PRO_MONTHLY: process.env.LS_VARIANT_PRO_MONTHLY!,
+  PRO_ANNUAL: process.env.LS_VARIANT_PRO_ANNUAL!,
+  AGENCY_MONTHLY: process.env.LS_VARIANT_AGENCY_MONTHLY!,
+  AGENCY_ANNUAL: process.env.LS_VARIANT_AGENCY_ANNUAL!,
 }
 
 export function canUseTool(plan: Plan, tool: string): boolean {

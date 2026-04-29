@@ -8,7 +8,7 @@ import { Card, Badge, Button, Spinner, ScoreBar } from '@/components/ui'
 type UsageData = {
   plan: string; count: number; limit: number; remaining: number
   subscription?: {
-    creemSubscriptionId: string; status: string
+    lsSubscriptionId: string; status: string
     currentPeriodEnd?: string; cancelledAt?: string; plan: string
   } | null
 }
@@ -297,7 +297,7 @@ export default function SettingsPage() {
                     )}
                     <div className="bg-slate-50 rounded-xl p-3.5">
                       <div className="text-xs text-slate-400 mb-1">Subscription ID</div>
-                      <div className="font-mono text-xs text-slate-500 truncate">{sub.creemSubscriptionId}</div>
+                      <div className="font-mono text-xs text-slate-500 truncate">{sub.lsSubscriptionId}</div>
                     </div>
                   </div>
 
