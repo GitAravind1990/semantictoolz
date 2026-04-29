@@ -78,36 +78,18 @@ export async function createCheckout(
   return data.data.attributes.url as string
 }
 
-export function verifyWebhookSignature(payload: string, signature: string): boolean {
-  const secret = process.env.LEMONSQUEEZY_WEBHOOK_SECRET
-
-  // --- deep diagnostic dump ---
+// secret is passed in from the route handler (read directly from process.env there)
+export function verifyWebhookSignature(payload: string, signature: string, secret: string): boolean {
   console.log('[LS-Webhook] === verifyWebhookSignature ===')
-  console.log('[LS-Webhook] VERCEL_ENV:', process.env.VERCEL_ENV ?? '(not set)')
-  console.log('[LS-Webhook] NODE_ENV:', process.env.NODE_ENV)
-  console.log('[LS-Webhook] secret defined:', secret !== undefined)
-  console.log('[LS-Webhook] secret typeof:', typeof secret)
-  console.log('[LS-Webhook] secret raw length:', secret?.length ?? 'n/a')
-  console.log('[LS-Webhook] secret trimmed length:', secret?.trim().length ?? 'n/a')
-  console.log('[LS-Webhook] secret has leading/trailing whitespace:', secret !== secret?.trim())
-  console.log('[LS-Webhook] secret preview:', secret ? `${secret.slice(0, 4)}...${secret.slice(-4)}` : '(none)')
-  console.log('[LS-Webhook] LEMON* env keys:', Object.keys(process.env).filter(k => k.includes('LEMON')))
-  console.log('[LS-Webhook] key in Object.keys:', Object.keys(process.env).includes('LEMONSQUEEZY_WEBHOOK_SECRET'))
+  console.log('[LS-Webhook] secret length:', secret.length)
+  console.log('[LS-Webhook] secret preview:', `${secret.slice(0, 4)}...${secret.slice(-4)}`)
   console.log('[LS-Webhook] signature defined:', !!signature)
   console.log('[LS-Webhook] signature length:', signature.length)
   console.log('[LS-Webhook] signature preview:', signature ? `${signature.slice(0, 10)}...` : '(none)')
   console.log('[LS-Webhook] payload length:', payload.length)
 
-  const effectiveSecret = secret?.trim()
-
-  if (!effectiveSecret) {
-    console.error('[LS-Webhook] FATAL: LEMONSQUEEZY_WEBHOOK_SECRET is missing or blank')
-    console.error('[LS-Webhook] All env keys:', Object.keys(process.env).sort().join(', '))
-    return false
-  }
-
   try {
-    const hmac = crypto.createHmac('sha256', effectiveSecret)
+    const hmac = crypto.createHmac('sha256', secret)
     const digest = hmac.update(payload).digest('hex')
     console.log('[LS-Webhook] computed digest length:', digest.length)
     console.log('[LS-Webhook] computed digest preview:', `${digest.slice(0, 10)}...`)

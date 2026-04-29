@@ -10,12 +10,21 @@ export async function POST(req: NextRequest) {
     const payload = await req.text()
     const signature = req.headers.get('x-signature') ?? ''
 
-    console.log('[LS-Webhook] POST received — VERCEL_ENV:', process.env.VERCEL_ENV ?? '(not set)')
-    console.log('[LS-Webhook] webhook secret set at route entry:', !!process.env.LEMONSQUEEZY_WEBHOOK_SECRET)
+    // Read secret directly here — avoids any webpack static-analysis substitution in imported modules
+    const webhookSecret = process.env['LEMONSQUEEZY_WEBHOOK_SECRET']
+
+    console.log('[LS-Webhook] POST received — VERCEL_ENV:', process.env['VERCEL_ENV'] ?? '(not set)')
+    console.log('[LS-Webhook] secret at route entry:', webhookSecret ? `set (${webhookSecret.length} chars)` : 'UNDEFINED')
     console.log('[LS-Webhook] x-signature header:', signature ? `${signature.slice(0, 10)}...` : '(empty)')
     console.log('[LS-Webhook] content-type:', req.headers.get('content-type'))
 
-    if (!verifyWebhookSignature(payload, signature)) {
+    if (!webhookSecret) {
+      console.error('[LS-Webhook] FATAL: LEMONSQUEEZY_WEBHOOK_SECRET is not set in this function runtime')
+      console.error('[LS-Webhook] All env keys with LEMON:', Object.keys(process.env).filter(k => k.includes('LEMON')))
+      return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 })
+    }
+
+    if (!verifyWebhookSignature(payload, signature, webhookSecret)) {
       console.error('[Webhook] Invalid signature')
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
     }
