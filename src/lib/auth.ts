@@ -83,7 +83,7 @@ export async function getUserUsage() {
   const { userId: clerkId } = await auth()
   if (!clerkId) throw new AuthError(401, 'Not authenticated')
 
-  const user = await prisma.user.findUnique({
+  let user = await prisma.user.findUnique({
     where: { clerkId },
     include: {
       usage: {
