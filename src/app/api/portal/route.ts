@@ -15,26 +15,31 @@ export async function POST(req: NextRequest) {
       include: { subscription: true },
     })
 
-    if (!user?.subscription?.lsCustomerId) {
+    if (!user?.subscription?.paddleCustomerId) {
       return apiError(new Error('No active subscription found'))
     }
 
-    // Fetch the Lemon Squeezy customer portal URL
+    const { paddleCustomerId, paddleSubscriptionId } = user.subscription
+
     const res = await fetch(
-      `https://api.lemonsqueezy.com/v1/customers/${user.subscription.lsCustomerId}`,
+      `https://api.paddle.com/customers/${paddleCustomerId}/portal-sessions`,
       {
+        method: 'POST',
         headers: {
-          Authorization: `Bearer ${process.env.LEMONSQUEEZY_API_KEY}`,
-          Accept: 'application/vnd.api+json',
+          Authorization: `Bearer ${process.env.PADDLE_API_KEY}`,
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ subscription_ids: [paddleSubscriptionId] }),
       }
     )
 
-    if (!res.ok) throw new Error('Could not fetch customer portal URL')
+    if (!res.ok) {
+      const err = await res.json()
+      throw new Error(err?.error?.detail ?? 'Could not create portal session')
+    }
 
     const data = await res.json()
-    const portalUrl = data.data?.attributes?.urls?.customer_portal
-
+    const portalUrl = data?.data?.urls?.general?.overview
     if (!portalUrl) throw new Error('Portal URL not available')
 
     return apiSuccess({ url: portalUrl })

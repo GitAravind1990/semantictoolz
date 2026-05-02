@@ -8,7 +8,7 @@ import { Card, Badge, Button, Spinner, ScoreBar } from '@/components/ui'
 type UsageData = {
   plan: string; count: number; limit: number; remaining: number
   subscription?: {
-    lsSubscriptionId: string; status: string
+    paddleSubscriptionId: string; status: string
     currentPeriodEnd?: string; cancelledAt?: string; plan: string
   } | null
 }
@@ -20,20 +20,10 @@ const PLAN_META: Record<string, { label: string; color: 'blue'|'amber'|'gray'; p
 }
 
 const ALL_TOOLS = [
-  { label: 'Content Analyzer', plans: ['FREE','PRO','AGENCY'] },
-  { label: 'Issues Audit',     plans: ['FREE','PRO','AGENCY'] },
-  { label: 'Entity Detection', plans: ['FREE','PRO','AGENCY'] },
-  { label: 'AI Cite Score',    plans: ['FREE','PRO','AGENCY'] },
-  { label: 'E-E-A-T Analysis', plans: ['PRO','AGENCY'] },
-  { label: 'AI Rewrite',       plans: ['PRO','AGENCY'] },
-  { label: 'Relevant Backlinks',plans: ['PRO','AGENCY'] },
-  { label: 'Citation Plan',    plans: ['PRO','AGENCY'] },
-  { label: 'Content Gap',      plans: ['PRO','AGENCY'] },
-  { label: 'AI Queries',       plans: ['PRO','AGENCY'] },
-  { label: 'Cite Tracker',     plans: ['AGENCY'] },
-  { label: 'Local SEO Suite',  plans: ['AGENCY'] },
-  { label: 'SERP Audit',       plans: ['AGENCY'] },
-  { label: 'Topical Authority',plans: ['AGENCY'] },
+  { label: 'Content Analyzer',  plans: ['FREE','PRO','AGENCY'] },
+  { label: 'Issues Audit',      plans: ['FREE','PRO','AGENCY'] },
+  { label: 'Content Optimizer', plans: ['PRO','AGENCY'] },
+  { label: 'More tools coming soon', plans: ['AGENCY'] },
 ]
 
 type Tab = 'account' | 'plan' | 'billing'
@@ -248,12 +238,12 @@ export default function SettingsPage() {
             {plan !== 'AGENCY' && (
               <div className={`rounded-2xl p-5 ${plan === 'FREE' ? 'bg-blue-600' : 'bg-amber-500'} text-white`}>
                 <div className="font-black text-base mb-1">
-                  {plan === 'FREE' ? 'Unlock 10 more tools with Pro' : 'Get Agency — 4 power tools'}
+                  {plan === 'FREE' ? 'Unlock Content Optimizer with Pro' : 'Get Agency — more capacity'}
                 </div>
                 <div className="text-sm opacity-80 mb-4">
                   {plan === 'FREE'
-                    ? 'E-E-A-T, AI Rewrite, Backlinks, Citation Plan, Content Gap, AI Queries — starting at $19/mo'
-                    : 'Cite Tracker, Local SEO Suite (4 tools), SERP Audit, Topical Authority — $49/mo'}
+                    ? 'Auto-fix your content issues with AI — starting at $19/mo'
+                    : '200 analyses / month + priority support — $49/mo'}
                 </div>
                 <Link href="/pricing"
                   className="inline-block bg-white text-sm font-black px-6 py-2.5 rounded-xl hover:opacity-90 transition-opacity"
@@ -297,7 +287,7 @@ export default function SettingsPage() {
                     )}
                     <div className="bg-slate-50 rounded-xl p-3.5">
                       <div className="text-xs text-slate-400 mb-1">Subscription ID</div>
-                      <div className="font-mono text-xs text-slate-500 truncate">{sub.lsSubscriptionId}</div>
+                      <div className="font-mono text-xs text-slate-500 truncate">{sub.paddleSubscriptionId}</div>
                     </div>
                   </div>
 

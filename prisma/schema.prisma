@@ -22,36 +22,36 @@ enum SubscriptionStatus {
 }
 
 model User {
-  id            String   @id @default(cuid())
-  clerkId       String   @unique
-  email         String   @unique
-  plan          Plan     @default(FREE)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String   @unique
+  plan      Plan     @default(FREE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  subscription  Subscription?
-  usage         Usage[]
+  subscription Subscription?
+  usage        Usage[]
 
   @@index([clerkId])
 }
 
 model Subscription {
-  id              String             @id @default(cuid())
-  userId          String             @unique
-  lsSubscriptionId String            @unique
-  lsCustomerId    String
-  lsVariantId     String
-  lsOrderId       String?
-  status          SubscriptionStatus @default(ACTIVE)
-  plan            Plan
-  currentPeriodEnd DateTime?
-  cancelledAt     DateTime?
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  paddleSubscriptionId String             @unique
+  paddleCustomerId     String
+  paddlePriceId        String
+  paddleTransactionId  String?
+  status               SubscriptionStatus @default(ACTIVE)
+  plan                 Plan
+  currentPeriodEnd     DateTime?
+  cancelledAt          DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([lsSubscriptionId])
+  @@index([paddleSubscriptionId])
   @@index([userId])
 }
 

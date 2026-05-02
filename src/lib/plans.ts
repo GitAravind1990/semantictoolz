@@ -8,15 +8,8 @@ export const PLAN_LIMITS: Record<Plan, number> = {
 
 export const PLAN_TOOLS: Record<Plan, string[]> = {
   FREE: ['analyse'],
-  PRO: ['analyse', 'eeat', 'rewrite', 'backlinks', 'citation', 'gap', 'queries','optimizer'],
-  AGENCY: ['analyse', 'eeat', 'rewrite', 'backlinks', 'citation', 'gap', 'queries', 'tracker', 'local', 'serp', 'topical', 'optimizer'],
-}
-
-export const PLAN_PRICES = {
-  PRO_MONTHLY: process.env.LS_VARIANT_PRO_MONTHLY!,
-  PRO_ANNUAL: process.env.LS_VARIANT_PRO_ANNUAL!,
-  AGENCY_MONTHLY: process.env.LS_VARIANT_AGENCY_MONTHLY!,
-  AGENCY_ANNUAL: process.env.LS_VARIANT_AGENCY_ANNUAL!,
+  PRO: ['analyse', 'optimizer'],
+  AGENCY: ['analyse', 'optimizer'],
 }
 
 export function canUseTool(plan: Plan, tool: string): boolean {
@@ -24,5 +17,5 @@ export function canUseTool(plan: Plan, tool: string): boolean {
 }
 
 export function getMonthKey(): string {
-  return new Date().toISOString().slice(0, 7) // "2025-06"
+  return new Date().toISOString().slice(0, 7)
 }
