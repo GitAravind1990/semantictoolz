@@ -93,7 +93,20 @@ export async function getUserUsage() {
     },
   })
 
-  if (!user) throw new AuthError(404, 'User not found')
+  if (!user) {
+    const clerkUser = await fetch(`https://api.clerk.com/v1/users/${clerkId}`, {
+      headers: { Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}` },
+    }).then(r => r.json())
+
+    user = await prisma.user.create({
+      data: {
+        clerkId,
+        email: clerkUser.email_addresses?.[0]?.email_address ?? '',
+        plan: Plan.FREE,
+      },
+      include: { usage: { where: { month: getMonthKey() } }, subscription: true },
+    })
+  }
 
   const month = getMonthKey()
   const count = user.usage.find(u => u.month === month)?.count ?? 0

@@ -49,9 +49,16 @@ export async function POST(req: NextRequest) {
   if (event.type === 'user.created') {
     const { id: clerkId, email_addresses, first_name, primary_email_address_id } = event.data
 
-    const primaryEmail = email_addresses.find(e => e.id === primary_email_address_id)
-      ?? email_addresses[0]
-    const email = primaryEmail?.email_address ?? ''
+    let email = (email_addresses.find(e => e.id === primary_email_address_id) ?? email_addresses[0])
+      ?.email_address ?? ''
+
+    if (!email) {
+      // Email missing from webhook payload — fetch directly from Clerk API
+      const clerkUser = await fetch(`https://api.clerk.com/v1/users/${clerkId}`, {
+        headers: { Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}` },
+      }).then(r => r.json())
+      email = clerkUser.email_addresses?.[0]?.email_address ?? ''
+    }
 
     if (!email) {
       console.warn('[Clerk Webhook] No email found for user', clerkId)
