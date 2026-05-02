@@ -20,7 +20,7 @@ const PLANS = [
       'Quick-win recommendations',
     ],
     cta: 'Get Started Free',
-    href: '/sign-up',
+    href: '/signup',
   },
   {
     name: 'Pro',
