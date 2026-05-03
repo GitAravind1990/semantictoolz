@@ -29,8 +29,9 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  subscription Subscription?
-  usage        Usage[]
+  subscription      Subscription?
+  usage             Usage[]
+  performanceAudits PerformanceFixerAudit[]
 
   @@index([clerkId])
 }
@@ -67,4 +68,60 @@ model Usage {
 
   @@unique([userId, month])
   @@index([userId, month])
+}
+
+model PerformanceFixerAudit {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  url        String
+  industry   String?
+  analyzedAt DateTime @default(now())
+
+  lcp  Float
+  fid  Float?
+  inp  Float?
+  cls  Float
+
+  lcpScore    Int
+  fidScore    Int?
+  clsScore    Int
+  overallScore   Int
+  projectedScore Int
+
+  revenueLoss      Float?
+  potentialRevenue Float?
+  fixTime          Int
+  fixCost          Float
+
+  fixes      String
+  totalFixes Int
+
+  industryAvg  Int?
+  industryRank Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  aiFixes AIFixGeneration[]
+
+  @@index([userId])
+}
+
+model AIFixGeneration {
+  id      String                @id @default(cuid())
+  auditId String
+  audit   PerformanceFixerAudit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+
+  fixType         String
+  language        String
+  beforeCode      String
+  afterCode       String
+  description     String
+  estimatedImpact Int
+  applied         Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  @@index([auditId])
 }

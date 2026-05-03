@@ -34,10 +34,11 @@ const TOOL_GROUPS = [
   {
     label: 'Agency',
     tools: [
-      { id: 'serp',    label: 'SERP Audit',        icon: '📈', href: '/dashboard/serp',    minPlan: 'AGENCY' },
-      { id: 'topical', label: 'Topical Authority', icon: '🗺️', href: '/dashboard/topical', minPlan: 'AGENCY' },
-      { id: 'local',   label: 'Local SEO',         icon: '📍', href: '/dashboard/local',   minPlan: 'AGENCY' },
-      { id: 'tracker', label: 'Cite Tracker',      icon: '🎯', href: '/dashboard/tracker', minPlan: 'AGENCY' },
+      { id: 'serp',                label: 'SERP Audit',           icon: '📈', href: '/dashboard/serp',                minPlan: 'AGENCY' },
+      { id: 'topical',             label: 'Topical Authority',    icon: '🗺️', href: '/dashboard/topical',             minPlan: 'AGENCY' },
+      { id: 'local',               label: 'Local SEO',            icon: '📍', href: '/dashboard/local',               minPlan: 'AGENCY' },
+      { id: 'tracker',             label: 'Cite Tracker',         icon: '🎯', href: '/dashboard/tracker',             minPlan: 'AGENCY' },
+      { id: 'performance-fixer',   label: 'AI Performance Fixer', icon: '⚡', href: '/dashboard/performance-fixer',   minPlan: 'AGENCY' },
     ],
   },
 ]

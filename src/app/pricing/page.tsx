@@ -48,6 +48,7 @@ const PLANS = [
     features: [
       '200 analyses / month',
       'Everything in Pro',
+      '⚡ AI Performance Fixer (exclusive)',
       'Priority support',
       'Team collaboration (coming soon)',
       'Bulk analysis (coming soon)',
