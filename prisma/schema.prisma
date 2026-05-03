@@ -30,9 +30,10 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  subscription      Subscription?
-  usage             Usage[]
-  performanceAudits PerformanceFixerAudit[]
+  subscription         Subscription?
+  usage                Usage[]
+  performanceAudits    PerformanceFixerAudit[]
+  contentOptimizations ContentOptimization[]
 
   @@index([clerkId])
 }
@@ -125,4 +126,75 @@ model AIFixGeneration {
   createdAt       DateTime @default(now())
 
   @@index([auditId])
+}
+
+model ContentOptimization {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  content       String  @db.Text
+  targetKeyword String
+  contentUrl    String?
+
+  detectedIntent    String
+  intentMatchScore  Int
+  intentSuggestions String @db.Text
+
+  entities            String @db.Text
+  entityScore         Int
+  missingEntities     String @db.Text
+  entityRelationships String @db.Text
+
+  lsiKeywords String @db.Text
+  missingLsi  String @db.Text
+  lsiScore    Int
+
+  recommendedSchema String
+  schemaJsonLd      String @db.Text
+
+  mainTopic          String
+  subtopicsCovered   String @db.Text
+  subtopicsMissing   String @db.Text
+  topicCoverageScore Int
+
+  pillarSuggestion    String?
+  clusterSuggestions  String? @db.Text
+  internalLinkingOps  String? @db.Text
+
+  experienceScore Int
+  expertiseScore  Int
+  authorityScore  Int
+  trustScore      Int
+  eeatOverall     Int
+
+  overallScore       Int
+  rewriteSuggestions String @db.Text
+  improvements       String @db.Text
+
+  analyzedAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  fixes ContentOptimizationFix[]
+
+  @@index([userId])
+}
+
+model ContentOptimizationFix {
+  id             String              @id @default(cuid())
+  optimizationId String
+  optimization   ContentOptimization @relation(fields: [optimizationId], references: [id], onDelete: Cascade)
+
+  category   String
+  priority   String
+  issue      String
+  suggestion String  @db.Text
+  beforeText String? @db.Text
+  afterText  String? @db.Text
+  applied    Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([optimizationId])
 }
