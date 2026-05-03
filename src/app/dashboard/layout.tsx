@@ -8,17 +8,52 @@ import { ContentProvider } from '@/context/ContentContext'
 
 type UsageData = { plan: string; count: number; limit: number; remaining: number }
 
-const TOOLS = [
-  { id: 'scores', label: 'Content Analyzer', icon: '📊', href: '/dashboard', minPlan: 'FREE' },
-  { id: 'issues', label: 'Issues Audit',      icon: '🔍', href: '/dashboard/issues', minPlan: 'FREE' },
-  { id: 'optimizer', label: 'Content Optimizer', icon: '⚡', href: '/dashboard/optimizer', minPlan: 'PRO' },
+const TOOL_GROUPS = [
+  {
+    label: 'Free',
+    tools: [
+      { id: 'scores',   label: 'Content Analyzer', icon: '📊', href: '/dashboard',          minPlan: 'FREE' },
+      { id: 'issues',   label: 'Issues Audit',      icon: '🔍', href: '/dashboard/issues',   minPlan: 'FREE' },
+      { id: 'aicite',   label: 'AI Cite Score',     icon: '🤖', href: '/dashboard/aicite',   minPlan: 'FREE' },
+      { id: 'entities', label: 'Entity Gaps',       icon: '🔗', href: '/dashboard/entities', minPlan: 'FREE' },
+    ],
+  },
+  {
+    label: 'Pro',
+    tools: [
+      { id: 'optimizer',        label: 'Content Optimizer', icon: '⚡', href: '/dashboard/optimizer',        minPlan: 'PRO' },
+      { id: 'rewrite',          label: 'AI Rewrite',        icon: '✍️', href: '/dashboard/rewrite',          minPlan: 'PRO' },
+      { id: 'eeat',             label: 'E-E-A-T Analysis',  icon: '🏆', href: '/dashboard/eeat',             minPlan: 'PRO' },
+      { id: 'keyword-research', label: 'Keyword Research',  icon: '🔑', href: '/dashboard/keyword-research', minPlan: 'PRO' },
+      { id: 'gap',              label: 'Content Gap',       icon: '🕳️', href: '/dashboard/gap',             minPlan: 'PRO' },
+      { id: 'queries',          label: 'AI Queries',        icon: '🔎', href: '/dashboard/queries',          minPlan: 'PRO' },
+      { id: 'citation',         label: 'Citation Plan',     icon: '📎', href: '/dashboard/citation',         minPlan: 'PRO' },
+      { id: 'backlinks',        label: 'Backlinks',         icon: '🔗', href: '/dashboard/backlinks',        minPlan: 'PRO' },
+    ],
+  },
+  {
+    label: 'Agency',
+    tools: [
+      { id: 'serp',    label: 'SERP Audit',        icon: '📈', href: '/dashboard/serp',    minPlan: 'AGENCY' },
+      { id: 'topical', label: 'Topical Authority', icon: '🗺️', href: '/dashboard/topical', minPlan: 'AGENCY' },
+      { id: 'local',   label: 'Local SEO',         icon: '📍', href: '/dashboard/local',   minPlan: 'AGENCY' },
+      { id: 'tracker', label: 'Cite Tracker',      icon: '🎯', href: '/dashboard/tracker', minPlan: 'AGENCY' },
+    ],
+  },
 ]
+
+const TOOLS = TOOL_GROUPS.flatMap(g => g.tools)
 
 function isUnlocked(minPlan: string, userPlan: string): boolean {
   if (minPlan === 'FREE') return true
   if (minPlan === 'PRO') return userPlan === 'PRO' || userPlan === 'AGENCY'
   if (minPlan === 'AGENCY') return userPlan === 'AGENCY'
   return false
+}
+
+const PLAN_BADGE: Record<string, string> = {
+  PRO: 'text-blue-500 bg-blue-50',
+  AGENCY: 'text-amber-600 bg-amber-50',
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -73,25 +108,35 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           {/* Nav */}
           <nav className="flex-1 py-3">
-            <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400">Tools</div>
-            {TOOLS.map(tool => {
-              const unlocked = isUnlocked(tool.minPlan, plan)
-              const active = isActive(tool)
-              return (
-                <Link
-                  key={tool.id}
-                  href={unlocked ? tool.href : '/pricing'}
-                  className={`flex items-center gap-2 mx-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                    active ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:bg-slate-100'
-                  }`}
-                >
-                  <span className="w-5 text-center text-base leading-none">{tool.icon}</span>
-                  <span className="flex-1 text-xs font-medium">{tool.label}</span>
-                  {!unlocked && <span className="text-slate-300 text-xs">🔒</span>}
-                  {tool.minPlan === 'PRO' && unlocked && <span className="text-[10px] font-bold text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded">PRO</span>}
-                </Link>
-              )
-            })}
+            {TOOL_GROUPS.map(group => (
+              <div key={group.label}>
+                <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400">{group.label}</div>
+                {group.tools.map(tool => {
+                  const unlocked = isUnlocked(tool.minPlan, plan)
+                  const active = isActive(tool)
+                  return (
+                    <Link
+                      key={tool.id}
+                      href={unlocked ? tool.href : '/pricing'}
+                      className={`flex items-center gap-2 mx-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                        active ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:bg-slate-100'
+                      }`}
+                    >
+                      <span className="w-5 text-center text-base leading-none">{tool.icon}</span>
+                      <span className="flex-1 text-xs font-medium">{tool.label}</span>
+                      {!unlocked
+                        ? <span className="text-slate-300 text-xs">🔒</span>
+                        : tool.minPlan !== 'FREE' && (
+                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${PLAN_BADGE[tool.minPlan] ?? ''}`}>
+                            {tool.minPlan}
+                          </span>
+                        )
+                      }
+                    </Link>
+                  )
+                })}
+              </div>
+            ))}
 
             <div className="mx-2 mt-2 h-px bg-slate-100" />
             <Link

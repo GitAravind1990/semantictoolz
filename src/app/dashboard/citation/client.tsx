@@ -33,6 +33,10 @@ export function CitationClient({ unlocked }: { unlocked: boolean }) {
                 {item.why && <p className="text-xs text-slate-400">{item.why}</p>}
               </Card>
             ))}
+            <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+              <button onClick={() => exportCitationCSV(d)} style={{ padding: '7px 14px', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#f8fafc', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>⬇ CSV</button>
+              <button onClick={() => exportCitationPDF(d)} style={{ padding: '7px 14px', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#f8fafc', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>⬇ PDF</button>
+            </div>
           </div>
         )
       }}
