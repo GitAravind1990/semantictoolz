@@ -155,6 +155,13 @@ export async function POST(req: NextRequest) {
       try { meta = extractJSON(raw.slice(delimIdx + DELIM.length).trim()) } catch { /* ok */ }
     }
 
+    // Strip dangerous HTML tags before sending to client (XSS prevention)
+    rewrittenContent = rewrittenContent.replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/<iframe[\s\S]*?<\/iframe>/gi, '')
+      .replace(/\son\w+\s*=/gi, ' data-removed=')
+      .replace(/<object[\s\S]*?<\/object>/gi, '')
+      .replace(/<embed[^>]*>/gi, '')
+
     return apiSuccess({
       rewritten_content: rewrittenContent,
       improvements: meta.improvements ?? [],

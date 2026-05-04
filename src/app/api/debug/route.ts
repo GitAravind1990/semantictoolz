@@ -1,6 +1,10 @@
+import { auth } from '@clerk/nextjs/server'
+import { prisma } from '@/lib/prisma'
 import { NextRequest } from 'next/server'
 
 export const runtime = 'nodejs'
+
+const ADMIN_EMAIL = 'gkm.aravind@gmail.com'
 
 function check(key: string) {
   const val = process.env[key]
@@ -8,24 +12,24 @@ function check(key: string) {
 }
 
 export async function GET(_req: NextRequest) {
+  const { userId } = await auth()
+  if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const user = await prisma.user.findUnique({ where: { clerkId: userId } })
+  if (user?.email !== ADMIN_EMAIL) {
+    return Response.json({ error: 'Admin only' }, { status: 403 })
+  }
+
   return Response.json({
-    _info: 'Runtime env var diagnostic — values are never exposed, only presence',
-    DATABASE_URL:                    check('DATABASE_URL'),
-    CLERK_SECRET_KEY:                check('CLERK_SECRET_KEY'),
-    CLERK_WEBHOOK_SECRET:            check('CLERK_WEBHOOK_SECRET'),
+    DATABASE_URL:                     check('DATABASE_URL'),
+    CLERK_SECRET_KEY:                 check('CLERK_SECRET_KEY'),
+    CLERK_WEBHOOK_SECRET:             check('CLERK_WEBHOOK_SECRET'),
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: check('NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY'),
-    ANTHROPIC_API_KEY:               check('ANTHROPIC_API_KEY'),
-    LEMONSQUEEZY_API_KEY:            check('LEMONSQUEEZY_API_KEY'),
-    LEMONSQUEEZY_STORE_ID:           check('LEMONSQUEEZY_STORE_ID'),
-    LEMONSQUEEZY_WEBHOOK_SECRET:     check('LEMONSQUEEZY_WEBHOOK_SECRET'),
-    LS_VARIANT_PRO_MONTHLY:          check('LS_VARIANT_PRO_MONTHLY'),
-    LS_VARIANT_PRO_ANNUAL:           check('LS_VARIANT_PRO_ANNUAL'),
-    LS_VARIANT_AGENCY_MONTHLY:       check('LS_VARIANT_AGENCY_MONTHLY'),
-    LS_VARIANT_AGENCY_ANNUAL:        check('LS_VARIANT_AGENCY_ANNUAL'),
-    RESEND_API_KEY:                  check('RESEND_API_KEY'),
-    EMAIL_FROM:                      check('EMAIL_FROM'),
-    NEXT_PUBLIC_APP_URL:             check('NEXT_PUBLIC_APP_URL'),
-    VERCEL_ENV:                      process.env['VERCEL_ENV'] ?? '(not set)',
-    NODE_ENV:                        process.env['NODE_ENV'],
+    ANTHROPIC_API_KEY:                check('ANTHROPIC_API_KEY'),
+    PADDLE_WEBHOOK_SECRET:            check('PADDLE_WEBHOOK_SECRET'),
+    RESEND_API_KEY:                   check('RESEND_API_KEY'),
+    NEXT_PUBLIC_APP_URL:              check('NEXT_PUBLIC_APP_URL'),
+    VERCEL_ENV:                       process.env['VERCEL_ENV'] ?? '(not set)',
+    NODE_ENV:                         process.env['NODE_ENV'],
   })
 }
