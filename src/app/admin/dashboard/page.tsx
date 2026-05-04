@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { UserButton } from '@clerk/nextjs';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -33,12 +34,15 @@ export default function AdminDashboard() {
     <div className="space-y-6 p-6 max-w-7xl mx-auto">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-black">SemanticToolz Owner Dashboard</h1>
-        <button
-          onClick={() => location.reload()}
-          className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm font-semibold"
-        >
-          Refresh
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => location.reload()}
+            className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm font-semibold"
+          >
+            Refresh
+          </button>
+          <UserButton afterSignOutUrl="/" />
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2 border-b pb-4">
