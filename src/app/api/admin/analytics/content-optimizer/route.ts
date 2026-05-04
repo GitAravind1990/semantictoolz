@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
     });
 
     const schemaUsage = await prisma.contentOptimization.count({
-      where: { analyzedAt: { gte: startDate }, recommendedSchema: { not: null } },
+      where: { analyzedAt: { gte: startDate }, recommendedSchema: { not: '' } },
     });
 
     const excellent = await prisma.contentOptimization.count({
