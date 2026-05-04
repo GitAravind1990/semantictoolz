@@ -12,21 +12,17 @@ const TOOL_GROUPS = [
   {
     label: 'Free',
     tools: [
-      { id: 'scores',   label: 'Content Analyzer', icon: '📊', href: '/dashboard',          minPlan: 'FREE' },
-      { id: 'issues',   label: 'Issues Audit',      icon: '🔍', href: '/dashboard/issues',   minPlan: 'FREE' },
-      { id: 'entities', label: 'Entity Gaps',       icon: '🔗', href: '/dashboard/entities', minPlan: 'FREE' },
+      { id: 'scores', label: 'Content Analyzer', icon: '📊', href: '/dashboard', minPlan: 'FREE' },
     ],
   },
   {
     label: 'Pro',
     tools: [
-      { id: 'optimizer',        label: 'Content Optimizer', icon: '⚡', href: '/dashboard/optimizer',        minPlan: 'PRO' },
-      { id: 'rewrite',          label: 'AI Rewrite',        icon: '✍️', href: '/dashboard/rewrite',          minPlan: 'PRO' },
-      { id: 'eeat',             label: 'E-E-A-T Analysis',  icon: '🏆', href: '/dashboard/eeat',             minPlan: 'PRO' },
-      { id: 'gap',              label: 'Content Gap',       icon: '🕳️', href: '/dashboard/gap',             minPlan: 'PRO' },
-      { id: 'queries',          label: 'AI Queries',        icon: '🔎', href: '/dashboard/queries',          minPlan: 'PRO' },
-      { id: 'citation',         label: 'Citation Plan',     icon: '📎', href: '/dashboard/citation',         minPlan: 'PRO' },
-      { id: 'backlinks',        label: 'Backlinks',         icon: '🔗', href: '/dashboard/backlinks',        minPlan: 'PRO' },
+      { id: 'optimizer', label: 'Content Optimizer', icon: '⚡', href: '/dashboard/optimizer', minPlan: 'PRO' },
+      { id: 'eeat',      label: 'E-E-A-T Analysis',  icon: '🏆', href: '/dashboard/eeat',      minPlan: 'PRO' },
+      { id: 'gap',       label: 'Content Gap',       icon: '🕳️', href: '/dashboard/gap',       minPlan: 'PRO' },
+      { id: 'citation',  label: 'AI Visibility',     icon: '🔭', href: '/dashboard/citation',  minPlan: 'PRO' },
+      { id: 'backlinks', label: 'Backlinks',         icon: '🔗', href: '/dashboard/backlinks', minPlan: 'PRO' },
     ],
   },
   {

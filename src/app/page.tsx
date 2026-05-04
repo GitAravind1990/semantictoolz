@@ -2,16 +2,12 @@ import Link from 'next/link'
 import { SignedIn, SignedOut } from '@clerk/nextjs'
 
 const tools = [
-  { icon: '📊', name: 'Content Analyzer', desc: '8-dimension score — Technical SEO, E-E-A-T, LLM Citation & more', plan: 'Free' },
-  { icon: '🔍', name: 'Issues Audit', desc: 'Prioritised content issues with specific fixes', plan: 'Free' },
-  { icon: '🔗', name: 'Entities', desc: 'Detect and analyze entities in your content', plan: 'Free' },
-  { icon: '⚡', name: 'Content Optimizer', desc: 'NEW — The only tool that FIXES your content issues automatically', plan: 'Pro', new: true },
+  { icon: '📊', name: 'Content Analyzer', desc: '8-dimension score with Issues & Entity tabs built in', plan: 'Free' },
+  { icon: '⚡', name: 'Content Optimizer', desc: 'Semantic SEO analysis + Full Rewrite mode — two tools in one', plan: 'Pro', new: true },
   { icon: '🏆', name: 'E-E-A-T Analysis', desc: 'Deep Experience, Expertise, Authority, Trust analysis', plan: 'Pro' },
   { icon: '🔗', name: 'Relevant Backlinks', desc: 'Real site-specific link building opportunities', plan: 'Pro' },
-  { icon: '✍️', name: 'AI Rewrite', desc: 'Full rewrite following Neil Patel & Brian Dean framework', plan: 'Pro' },
-  { icon: '📎', name: 'Citation Plan', desc: 'Strategy to get your content cited by AI assistants', plan: 'Pro' },
+  { icon: '🔭', name: 'AI Visibility', desc: 'Citation strategy + AI query mapping — get cited by ChatGPT & Perplexity', plan: 'Pro' },
   { icon: '🕳️', name: 'Content Gap', desc: 'Topics competitors cover that you don\'t', plan: 'Pro' },
-  { icon: '🔎', name: 'AI Queries', desc: 'Query suggestions for AI search optimization', plan: 'Pro' },
   { icon: '🎯', name: 'Cite Tracker', desc: 'Simulate ChatGPT & Perplexity responses for your queries', plan: 'Agency' },
   { icon: '⚡', name: 'AI Performance Fixer', desc: 'Fix Core Web Vitals — LCP, CLS, FID — with AI-generated code patches', plan: 'Agency' },
   { icon: '📍', name: 'Local SEO Suite', desc: '4 tools — entities, NAP, local queries, GBP content', plan: 'Agency' },
@@ -31,12 +27,12 @@ const testimonials = [
 const plans = [
   {
     name: 'Free', price: '$0', period: 'forever', color: 'gray',
-    features: ['3 analyses / month', '8-dimension content score', 'Issues audit', 'Entity detection'],
+    features: ['3 analyses / month', '8-dimension content score', 'Issues audit (tab)', 'Entity gaps (tab)'],
     cta: 'Get Started Free', signedOutHref: '/signup', signedInHref: '/dashboard',
   },
   {
     name: 'Pro', price: '$19', period: 'per month', color: 'blue', featured: true,
-    features: ['50 analyses / month', 'Everything in Free', '⚡ Content Optimizer (NEW)', 'E-E-A-T deep analysis', 'Relevant Backlinks finder', 'AI content rewriter', 'Citation strategy engine', 'Content Gap analyzer', 'AI Query mapper'],
+    features: ['50 analyses / month', 'Everything in Free', '⚡ Content Optimizer + Full Rewrite', 'E-E-A-T deep analysis', 'Relevant Backlinks finder', '🔭 AI Visibility (Citation + Queries)', 'Content Gap analyzer'],
     cta: 'Start Pro Trial', signedOutHref: '/signup', signedInHref: '/pricing',
   },
   {
@@ -83,7 +79,7 @@ export default function HomePage() {
           </span>
         </h1>
         <p className="text-xl text-slate-500 max-w-2xl mx-auto mb-10 leading-relaxed">
-          SemanticToolz is the only platform that detects AND fixes your content issues — with 15 specialist tools covering content analysis, E-E-A-T, citations, local SEO, topical authority, and automated optimization.
+          SemanticToolz is the only platform that detects AND fixes your content issues — with 11 specialist tools covering content analysis, E-E-A-T, citations, local SEO, topical authority, and automated optimization.
         </p>
         <div className="flex items-center justify-center gap-4 flex-wrap">
           <SignedOut>
@@ -101,7 +97,7 @@ export default function HomePage() {
           </a>
         </div>
         <div className="mt-16 flex justify-center gap-12 border-t border-slate-100 pt-12 flex-wrap">
-          {[['15', 'AI-powered tools'], ['8', 'Score dimensions'], ['3', 'Plan tiers'], ['100%', 'AI-powered']].map(([n, l]) => (
+          {[['11', 'AI-powered tools'], ['8', 'Score dimensions'], ['3', 'Plan tiers'], ['100%', 'AI-powered']].map(([n, l]) => (
             <div key={l} className="text-center">
               <div className="text-3xl font-black text-slate-900">{n}</div>
               <div className="text-sm text-slate-400 mt-1">{l}</div>
@@ -148,7 +144,7 @@ export default function HomePage() {
       <section className="py-20 px-6">
         <div className="mx-auto max-w-6xl">
           <p className="text-center text-xs font-bold uppercase tracking-widest text-brand-600 mb-3">Everything you need</p>
-          <h2 className="text-4xl font-extrabold text-center tracking-tight mb-4">15 Tools. One Platform.</h2>
+          <h2 className="text-4xl font-extrabold text-center tracking-tight mb-4">11 Tools. One Platform.</h2>
           <p className="text-center text-slate-500 max-w-lg mx-auto mb-12">From content scoring to topical authority mapping and AI-powered fixing — built for content teams, SEOs, and agencies.</p>
           <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-4">
             {tools.map(t => (

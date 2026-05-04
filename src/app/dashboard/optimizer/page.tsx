@@ -124,7 +124,10 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'fixes',    label: '🔧 AI Fixes' },
 ];
 
+type Mode = 'analyze' | 'rewrite';
+
 export default function ContentOptimizerPage() {
+  const [mode, setMode]             = useState<Mode>('analyze');
   const [content, setContent]       = useState('');
   const [keyword, setKeyword]       = useState('');
   const [contentUrl, setContentUrl] = useState('');
@@ -132,6 +135,37 @@ export default function ContentOptimizerPage() {
   const [result, setResult]         = useState<AnalysisResult | null>(null);
   const [activeTab, setActiveTab]   = useState<TabId>('overview');
   const [error, setError]           = useState('');
+
+  // Rewrite mode state
+  const [rwLoading, setRwLoading]   = useState(false);
+  const [rwStep, setRwStep]         = useState('');
+  const [rwResult, setRwResult]     = useState<{
+    rewritten_content: string; improvements: string[]; framework_sections_applied: string[];
+    eeat_applied?: { overall: number; summary: string; dimensions: Record<string, { score: number; finding: string }>; recommendations: string[] }
+  } | null>(null);
+  const [rwError, setRwError]       = useState('');
+  const [rwCopied, setRwCopied]     = useState(false);
+  const [rwViewMode, setRwViewMode] = useState<'preview' | 'html'>('preview');
+
+  async function handleRewrite() {
+    if (content.length < 50) { setRwError('Paste content to rewrite'); return }
+    setRwLoading(true); setRwError(''); setRwStep('Step 1/2: Running E-E-A-T analysis…');
+    try {
+      const r = await fetch('/api/rewrite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content }) });
+      setRwStep('Step 2/2: Rewriting with framework…');
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error);
+      setRwResult(d);
+    } catch (e) { setRwError(e instanceof Error ? e.message : 'Rewrite failed'); }
+    finally { setRwLoading(false); setRwStep(''); }
+  }
+
+  async function rwCopy() {
+    if (!rwResult?.rewritten_content) return;
+    const plain = rwResult.rewritten_content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    await navigator.clipboard.writeText(plain);
+    setRwCopied(true); setTimeout(() => setRwCopied(false), 2000);
+  }
 
   const handleAnalyze = async () => {
     setLoading(true);
@@ -158,67 +192,123 @@ export default function ContentOptimizerPage() {
   return (
     <div className="flex-1 overflow-y-auto p-6">
       <div className="max-w-5xl mx-auto space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-2xl font-black flex items-center gap-2">
-            🚀 Content Optimizer
-            <span className="text-[10px] bg-gradient-to-r from-purple-500 to-blue-500 text-white px-2.5 py-0.5 rounded-full font-bold">
-              SEMANTIC SEO
-            </span>
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Intent · Entities · LSI Keywords · Schema · Topic Clusters · E-E-A-T · AI Fixes — all in one analysis
-          </p>
-        </div>
-
-        {/* Input form */}
-        <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs font-bold text-slate-600 mb-1.5 block">Target Keyword *</label>
-              <input
-                type="text"
-                placeholder="e.g., content marketing strategy"
-                value={keyword}
-                onChange={e => setKeyword(e.target.value)}
-                className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-bold text-slate-600 mb-1.5 block">Content URL <span className="font-normal text-slate-400">(optional)</span></label>
-              <input
-                type="url"
-                placeholder="https://yoursite.com/article"
-                value={contentUrl}
-                onChange={e => setContentUrl(e.target.value)}
-                className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
-              />
-            </div>
-          </div>
+        {/* Header + mode toggle */}
+        <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <label className="text-xs font-bold text-slate-600 mb-1.5 block">Content *</label>
-            <textarea
-              placeholder="Paste your content here..."
-              value={content}
-              onChange={e => setContent(e.target.value)}
-              rows={10}
-              className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none"
-            />
-            <div className="text-xs text-slate-400 mt-1">{content.length} characters</div>
+            <h1 className="text-2xl font-black flex items-center gap-2">
+              🚀 Content Optimizer
+              <span className="text-[10px] bg-gradient-to-r from-purple-500 to-blue-500 text-white px-2.5 py-0.5 rounded-full font-bold">
+                SEMANTIC SEO
+              </span>
+            </h1>
+            <p className="text-sm text-slate-500 mt-1">
+              {mode === 'analyze'
+                ? 'Intent · Entities · LSI Keywords · Schema · Topic Clusters · E-E-A-T · AI Fixes — all in one analysis'
+                : 'Full content rewrite following Neil Patel & Brian Dean framework with E-E-A-T applied automatically'}
+            </p>
           </div>
-          {error && <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p>}
-          <button
-            onClick={handleAnalyze}
-            disabled={loading || !content || !keyword}
-            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 text-white py-3 rounded-lg text-sm font-bold transition-all"
-          >
-            {loading
-              ? '🔍 Running 7 analyses in parallel… (~30 sec)'
-              : '🚀 Analyze Everything'}
-          </button>
+          <div className="flex rounded-xl border border-slate-200 overflow-hidden text-xs shrink-0">
+            <button onClick={() => setMode('analyze')}
+              className={`px-4 py-2 font-bold transition-colors ${mode === 'analyze' ? 'bg-purple-600 text-white' : 'bg-white text-slate-500 hover:bg-slate-50'}`}>
+              🔍 Analyze
+            </button>
+            <button onClick={() => setMode('rewrite')}
+              className={`px-4 py-2 font-bold transition-colors ${mode === 'rewrite' ? 'bg-purple-600 text-white' : 'bg-white text-slate-500 hover:bg-slate-50'}`}>
+              ✍️ Full Rewrite
+            </button>
+          </div>
         </div>
 
-        {result && <ResultsDisplay result={result} activeTab={activeTab} setActiveTab={setActiveTab} />}
+        {mode === 'analyze' ? (
+          <>
+            {/* Analyze input form */}
+            <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-slate-600 mb-1.5 block">Target Keyword *</label>
+                  <input type="text" placeholder="e.g., content marketing strategy" value={keyword} onChange={e => setKeyword(e.target.value)}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-600 mb-1.5 block">Content URL <span className="font-normal text-slate-400">(optional)</span></label>
+                  <input type="url" placeholder="https://yoursite.com/article" value={contentUrl} onChange={e => setContentUrl(e.target.value)}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400" />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-600 mb-1.5 block">Content *</label>
+                <textarea placeholder="Paste your content here..." value={content} onChange={e => setContent(e.target.value)} rows={10}
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none" />
+                <div className="text-xs text-slate-400 mt-1">{content.length} characters</div>
+              </div>
+              {error && <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p>}
+              <button onClick={handleAnalyze} disabled={loading || !content || !keyword}
+                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 text-white py-3 rounded-lg text-sm font-bold transition-all">
+                {loading ? '🔍 Running 7 analyses in parallel… (~30 sec)' : '🚀 Analyze Everything'}
+              </button>
+            </div>
+            {result && <ResultsDisplay result={result} activeTab={activeTab} setActiveTab={setActiveTab} />}
+          </>
+        ) : (
+          <>
+            {/* Rewrite input form */}
+            <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
+              <div>
+                <label className="text-xs font-bold text-slate-600 mb-1.5 block">Content *</label>
+                <textarea placeholder="Paste your content here to rewrite…" value={content} onChange={e => setContent(e.target.value)} rows={10}
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none" />
+              </div>
+              {rwError && <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{rwError}</p>}
+              <button onClick={handleRewrite} disabled={rwLoading || content.length < 50}
+                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 text-white py-3 rounded-lg text-sm font-bold transition-all">
+                {rwLoading ? rwStep || 'Rewriting…' : '✍️ Rewrite Content'}
+              </button>
+            </div>
+
+            {rwResult && (
+              <div className="space-y-4">
+                {rwResult.eeat_applied?.overall && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="text-2xl font-black text-blue-700">{rwResult.eeat_applied.overall}</div>
+                      <div>
+                        <div className="text-xs font-bold text-blue-800">E-E-A-T Applied to Rewrite</div>
+                        <div className="text-xs text-blue-600">{rwResult.eeat_applied.summary}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {rwResult.framework_sections_applied?.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {rwResult.framework_sections_applied.map(s => (
+                      <span key={s} className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-bold">✓ {s.replace(/_/g, ' ')}</span>
+                    ))}
+                  </div>
+                )}
+                <div className="bg-white border border-slate-200 rounded-xl p-6">
+                  <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                    <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Rewritten Content</div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex rounded-lg border border-slate-200 overflow-hidden text-xs">
+                        <button onClick={() => setRwViewMode('preview')} className={`px-3 py-1.5 font-bold transition-colors ${rwViewMode === 'preview' ? 'bg-slate-900 text-white' : 'bg-white text-slate-500'}`}>Preview</button>
+                        <button onClick={() => setRwViewMode('html')} className={`px-3 py-1.5 font-bold transition-colors ${rwViewMode === 'html' ? 'bg-slate-900 text-white' : 'bg-white text-slate-500'}`}>HTML</button>
+                      </div>
+                      <button onClick={rwCopy} className="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg font-bold">{rwCopied ? '✓ Copied!' : '📋 Copy'}</button>
+                    </div>
+                  </div>
+                  {rwViewMode === 'preview' ? (
+                    <div className="prose prose-slate max-w-none text-sm leading-relaxed max-h-[600px] overflow-y-auto
+                      [&_h1]:text-xl [&_h1]:font-black [&_h2]:text-base [&_h2]:font-black [&_p]:text-slate-600 [&_p]:mb-3"
+                      dangerouslySetInnerHTML={{ __html: rwResult.rewritten_content }} />
+                  ) : (
+                    <pre className="whitespace-pre-wrap text-xs leading-relaxed text-slate-600 font-mono max-h-[600px] overflow-y-auto bg-slate-50 p-3 rounded-lg">{rwResult.rewritten_content}</pre>
+                  )}
+                </div>
+                <button onClick={() => setRwResult(null)} className="text-xs bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-lg font-bold">↺ Rewrite Again</button>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
