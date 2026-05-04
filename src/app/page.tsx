@@ -13,7 +13,9 @@ const tools = [
   { icon: '📎', name: 'Citation Plan', desc: 'Strategy to get your content cited by AI assistants', plan: 'Pro' },
   { icon: '🕳️', name: 'Content Gap', desc: 'Topics competitors cover that you don\'t', plan: 'Pro' },
   { icon: '🔎', name: 'AI Queries', desc: 'Query suggestions for AI search optimization', plan: 'Pro' },
+  { icon: '🔑', name: 'Keyword Research', desc: 'AI-powered keyword discovery with intent, volume & difficulty', plan: 'Pro' },
   { icon: '🎯', name: 'Cite Tracker', desc: 'Simulate ChatGPT & Perplexity responses for your queries', plan: 'Agency' },
+  { icon: '⚡', name: 'AI Performance Fixer', desc: 'Fix Core Web Vitals — LCP, CLS, FID — with AI-generated code patches', plan: 'Agency' },
   { icon: '📍', name: 'Local SEO Suite', desc: '4 tools — entities, NAP, local queries, GBP content', plan: 'Agency' },
   { icon: '📈', name: 'SERP Audit', desc: 'Competitor breakdown, root cause diagnosis, recovery plan', plan: 'Agency' },
   { icon: '🗺️', name: 'Topical Authority', desc: 'Visual keyword cluster map with search volumes & calendar', plan: 'Agency' },
@@ -36,12 +38,12 @@ const plans = [
   },
   {
     name: 'Pro', price: '$19', period: 'per month', color: 'blue', featured: true,
-    features: ['50 analyses / month', 'Everything in Free', '⚡ Content Optimizer (NEW)', 'E-E-A-T deep analysis', 'Relevant Backlinks finder', 'AI content rewriter', 'Citation strategy engine', 'Content Gap analyzer', 'AI Query mapper'],
+    features: ['50 analyses / month', 'Everything in Free', '⚡ Content Optimizer (NEW)', 'E-E-A-T deep analysis', 'Relevant Backlinks finder', 'AI content rewriter', 'Citation strategy engine', 'Content Gap analyzer', 'AI Query mapper', 'Keyword Research'],
     cta: 'Start Pro Trial', signedOutHref: '/signup', signedInHref: '/pricing',
   },
   {
     name: 'Agency', price: '$49', period: 'per month', color: 'amber',
-    features: ['200 analyses / month', 'Everything in Pro', 'AI Citation Tracker', 'Local SEO Suite (4 tools)', 'SERP Competitor Audit', 'Topical Authority Mapper ★'],
+    features: ['200 analyses / month', 'Everything in Pro', 'AI Citation Tracker', 'Local SEO Suite (4 tools)', 'SERP Competitor Audit', 'Topical Authority Mapper ★', 'AI Performance Fixer (Core Web Vitals)'],
     cta: 'Start Agency Trial', signedOutHref: '/signup', signedInHref: '/pricing',
   },
 ]
@@ -83,7 +85,7 @@ export default function HomePage() {
           </span>
         </h1>
         <p className="text-xl text-slate-500 max-w-2xl mx-auto mb-10 leading-relaxed">
-          SemanticToolz is the only platform that detects AND fixes your content issues — with 15 specialist tools covering content analysis, E-E-A-T, citations, local SEO, topical authority, and automated optimization.
+          SemanticToolz is the only platform that detects AND fixes your content issues — with 17 specialist tools covering content analysis, E-E-A-T, citations, local SEO, topical authority, and automated optimization.
         </p>
         <div className="flex items-center justify-center gap-4 flex-wrap">
           <SignedOut>
@@ -101,7 +103,7 @@ export default function HomePage() {
           </a>
         </div>
         <div className="mt-16 flex justify-center gap-12 border-t border-slate-100 pt-12 flex-wrap">
-          {[['15', 'AI-powered tools'], ['8', 'Score dimensions'], ['3', 'Plan tiers'], ['100%', 'AI-powered']].map(([n, l]) => (
+          {[['17', 'AI-powered tools'], ['8', 'Score dimensions'], ['3', 'Plan tiers'], ['100%', 'AI-powered']].map(([n, l]) => (
             <div key={l} className="text-center">
               <div className="text-3xl font-black text-slate-900">{n}</div>
               <div className="text-sm text-slate-400 mt-1">{l}</div>
@@ -148,7 +150,7 @@ export default function HomePage() {
       <section className="py-20 px-6">
         <div className="mx-auto max-w-6xl">
           <p className="text-center text-xs font-bold uppercase tracking-widest text-brand-600 mb-3">Everything you need</p>
-          <h2 className="text-4xl font-extrabold text-center tracking-tight mb-4">15 Tools. One Platform.</h2>
+          <h2 className="text-4xl font-extrabold text-center tracking-tight mb-4">17 Tools. One Platform.</h2>
           <p className="text-center text-slate-500 max-w-lg mx-auto mb-12">From content scoring to topical authority mapping and AI-powered fixing — built for content teams, SEOs, and agencies.</p>
           <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-4">
             {tools.map(t => (
