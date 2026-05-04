@@ -39,7 +39,7 @@ export function WelcomeEmail({ firstName = 'there', dashboardUrl }: WelcomeEmail
               {[
                 ['📊', 'Run a content analysis', 'Get an 8-dimension SEO score in 30 seconds'],
                 ['🔍', 'Fix your top issues', 'Prioritised list of problems with specific fixes'],
-                ['🤖', 'Check your AI Cite Score', 'See how likely ChatGPT & Perplexity are to cite you'],
+                ['🕳️', 'Find content gaps', 'Discover topics competitors cover that you don\'t'],
               ].map(([icon, title, desc]) => (
                 <Section key={title} className="mb-3">
                   <Text className="m-0 text-sm">
