@@ -66,6 +66,8 @@ export default function HomePage() {
             SemanticToolz
           </div>
           <div className="flex-1" />
+          <Link href="/blog" className="text-sm font-medium text-slate-600 hover:text-slate-900 hidden sm:block">Blog</Link>
+          <Link href="/pricing" className="text-sm font-medium text-slate-600 hover:text-slate-900 hidden sm:block">Pricing</Link>
           <SignedOut>
             <Link href="/login" className="text-sm font-medium text-slate-600 hover:text-slate-900">Sign in</Link>
             <Link href="/signup" className="ml-2 rounded-full bg-brand-600 px-5 py-2 text-sm font-bold text-white hover:bg-brand-700 transition-colors">
