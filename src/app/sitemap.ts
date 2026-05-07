@@ -3,8 +3,8 @@ import { getAllPosts } from '@/lib/blog'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://semantictoolz.com'
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const posts = getAllPosts().map(post => ({
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const posts = (await getAllPosts()).map(post => ({
     url: `${APP_URL}/blog/${post.slug}`,
     lastModified: new Date(post.date),
     changeFrequency: 'monthly' as const,

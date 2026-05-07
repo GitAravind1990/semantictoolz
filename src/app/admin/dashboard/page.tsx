@@ -35,6 +35,12 @@ export default function AdminDashboard() {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-black">SemanticToolz Owner Dashboard</h1>
         <div className="flex items-center gap-3">
+          <a
+            href="/admin/blog"
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm font-semibold"
+          >
+            Blog Posts
+          </a>
           <button
             onClick={() => location.reload()}
             className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm font-semibold"

@@ -19,8 +19,8 @@ const CATEGORY_COLORS: Record<string, string> = {
   'SEO Strategy': 'bg-violet-50 text-violet-700',
 }
 
-export default function BlogPage() {
-  const posts = getAllPosts()
+export default async function BlogPage() {
+  const posts = await getAllPosts()
 
   return (
     <div className="min-h-screen bg-white">

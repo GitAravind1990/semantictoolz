@@ -1,8 +1,4 @@
-import fs from 'fs'
-import path from 'path'
-import matter from 'gray-matter'
-
-const BLOG_DIR = path.join(process.cwd(), 'content', 'blog')
+import { prisma } from '@/lib/prisma'
 
 export interface PostMeta {
   slug: string
@@ -17,20 +13,17 @@ export interface Post extends PostMeta {
   content: string
 }
 
-export function getAllPosts(): PostMeta[] {
-  const files = fs.readdirSync(BLOG_DIR).filter(f => f.endsWith('.mdx'))
-  return files
-    .map(filename => {
-      const slug = filename.replace(/\.mdx$/, '')
-      const { data } = matter(fs.readFileSync(path.join(BLOG_DIR, filename), 'utf8'))
-      return { slug, ...(data as Omit<PostMeta, 'slug'>) }
-    })
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+export async function getAllPosts(): Promise<PostMeta[]> {
+  const posts = await prisma.blogPost.findMany({
+    where: { published: true },
+    orderBy: { publishedAt: 'desc' },
+    select: { slug: true, title: true, description: true, publishedAt: true, readingTime: true, category: true },
+  })
+  return posts.map(p => ({ ...p, date: p.publishedAt?.toISOString().split('T')[0] ?? '' }))
 }
 
-export function getPost(slug: string): Post | null {
-  const filePath = path.join(BLOG_DIR, `${slug}.mdx`)
-  if (!fs.existsSync(filePath)) return null
-  const { data, content } = matter(fs.readFileSync(filePath, 'utf8'))
-  return { slug, content, ...(data as Omit<PostMeta, 'slug'>) }
+export async function getPost(slug: string): Promise<Post | null> {
+  const post = await prisma.blogPost.findUnique({ where: { slug, published: true } })
+  if (!post) return null
+  return { ...post, date: post.publishedAt?.toISOString().split('T')[0] ?? '' }
 }
