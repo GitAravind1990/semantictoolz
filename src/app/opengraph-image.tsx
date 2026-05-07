@@ -25,7 +25,7 @@ export default function OGImage() {
           AI Content Optimizer · Rank Higher · Get Cited by Every AI
         </div>
         <div style={{ display: 'flex', gap: 16, marginTop: 40 }}>
-          {['14 Tools', '8 Score Dims', 'Free to start'].map(t => (
+          {['11 Tools', '8 Score Dims', 'Free to start'].map(t => (
             <div key={t} style={{
               background: 'rgba(255,255,255,0.15)', borderRadius: 12,
               padding: '8px 20px', color: 'white', fontSize: 18, fontWeight: 700,

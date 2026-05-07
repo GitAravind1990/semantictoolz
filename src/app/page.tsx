@@ -1,5 +1,18 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { SignedIn, SignedOut } from '@clerk/nextjs'
+
+export const metadata: Metadata = {
+  title: 'SemanticToolz — AI Content Optimizer | Rank Higher on Google & AI Search',
+  description: 'Rank higher on Google and get cited by ChatGPT, Perplexity, and every AI engine. 11 AI-powered SEO tools: Content Optimizer, E-E-A-T Analysis, Topical Authority, SERP Audit, and more.',
+  alternates: { canonical: '/' },
+  openGraph: {
+    title: 'SemanticToolz — AI Content Optimizer',
+    description: 'Rank higher on Google and get cited by ChatGPT & Perplexity. 11 AI-powered SEO tools for content teams and agencies.',
+    url: '/',
+    images: [{ url: '/opengraph-image', width: 1200, height: 628, alt: 'SemanticToolz — AI Content Optimizer' }],
+  },
+}
 
 const tools = [
   { icon: '📊', name: 'Content Analyzer', desc: '8-dimension score with Issues & Entity tabs built in', plan: 'Free' },

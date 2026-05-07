@@ -5,12 +5,45 @@ import './globals.css'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://semantictoolz.com'
+
 export const metadata: Metadata = {
-  title: 'SemanticToolz — AI Content Optimizer',
-  description: 'Rank higher on Google. Get cited by every AI. 14 AI-powered SEO tools for content teams, SEOs and agencies.',
+  metadataBase: new URL(APP_URL),
+  title: {
+    default: 'SemanticToolz — AI Content Optimizer',
+    template: '%s | SemanticToolz',
+  },
+  description: 'Rank higher on Google and get cited by ChatGPT, Perplexity, and every AI engine. 11 AI-powered SEO tools for content teams, SEOs, and agencies.',
+  keywords: [
+    'AI SEO tools', 'content optimizer', 'E-E-A-T analysis', 'AI citations',
+    'semantic SEO', 'content gap analysis', 'topical authority', 'SERP audit',
+    'AI visibility', 'Core Web Vitals fixer', 'local SEO', 'backlink finder',
+  ],
+  authors: [{ name: 'SemanticToolz' }],
+  creator: 'SemanticToolz',
   openGraph: {
-    title: 'SemanticToolz v2',
-    description: 'AI-powered content optimization for Google & AI search',
+    type: 'website',
+    siteName: 'SemanticToolz',
+    title: 'SemanticToolz — AI Content Optimizer',
+    description: 'Rank higher on Google and get cited by ChatGPT & Perplexity. 11 AI-powered SEO tools.',
+    url: '/',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'SemanticToolz — AI Content Optimizer',
+    description: 'Rank higher on Google and get cited by ChatGPT & Perplexity. 11 AI-powered SEO tools.',
+    creator: '@semantictoolz',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-snippet': -1,
+      'max-image-preview': 'large',
+      'max-video-preview': -1,
+    },
   },
 }
 
