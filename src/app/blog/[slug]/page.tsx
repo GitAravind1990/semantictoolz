@@ -79,7 +79,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         </p>
 
         <div className="prose prose-slate prose-headings:font-bold prose-headings:tracking-tight prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline prose-code:bg-slate-100 prose-code:px-1 prose-code:rounded prose-code:text-sm prose-strong:text-slate-900 max-w-none">
-          <MDXRemote source={post.content} />
+          {post.contentType === 'html'
+            ? <div dangerouslySetInnerHTML={{ __html: post.content }} />
+            : <MDXRemote source={post.content} />
+          }
         </div>
 
         <div className="mt-16 pt-10 border-t border-slate-100 rounded-2xl bg-blue-50 p-8">

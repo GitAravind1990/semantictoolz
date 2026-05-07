@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import BlogEditor from '../../BlogEditor'
+import GutenbergEditor from '../../GutenbergEditor'
 
 export default async function EditPostPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -8,7 +8,7 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
   if (!post) notFound()
 
   return (
-    <BlogEditor
+    <GutenbergEditor
       mode="edit"
       initial={{
         id: post.id,
@@ -16,9 +16,13 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
         title: post.title,
         description: post.description,
         content: post.content,
+        contentType: post.contentType,
         category: post.category,
+        tags: post.tags,
+        featuredImage: post.featuredImage ?? '',
         readingTime: post.readingTime,
         published: post.published,
+        scheduledAt: post.scheduledAt?.toISOString().slice(0, 16) ?? '',
       }}
     />
   )

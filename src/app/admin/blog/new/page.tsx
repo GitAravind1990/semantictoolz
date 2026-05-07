@@ -1,5 +1,5 @@
-import BlogEditor from '../BlogEditor'
+import GutenbergEditor from '../GutenbergEditor'
 
 export default function NewPostPage() {
-  return <BlogEditor mode="new" />
+  return <GutenbergEditor mode="new" />
 }

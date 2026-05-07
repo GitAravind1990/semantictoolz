@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
   if (!check.ok) return NextResponse.json({ error: check.error }, { status: check.status })
 
   const body = await req.json()
-  const { slug, title, description, content, category, readingTime, published } = body
+  const { slug, title, description, content, contentType, category, tags, featuredImage, readingTime, published, scheduledAt } = body
 
   if (!slug || !title || !content) {
     return NextResponse.json({ error: 'slug, title, and content are required' }, { status: 400 })
@@ -30,10 +30,14 @@ export async function POST(req: NextRequest) {
       title,
       description: description ?? '',
       content,
+      contentType: contentType ?? 'html',
       category: category ?? 'SEO',
+      tags: tags ?? '',
+      featuredImage: featuredImage || null,
       readingTime: readingTime ?? '5 min read',
       published: published ?? false,
       publishedAt: published ? new Date() : null,
+      scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
     },
   })
   return NextResponse.json(post, { status: 201 })

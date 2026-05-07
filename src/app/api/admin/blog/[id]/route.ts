@@ -18,7 +18,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const { id } = await params
   const body = await req.json()
-  const { title, slug, description, content, category, readingTime, published } = body
+  const { title, slug, description, content, contentType, category, tags, featuredImage, readingTime, published, scheduledAt } = body
 
   const existing = await prisma.blogPost.findUnique({ where: { id } })
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
@@ -30,10 +30,14 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       slug,
       description,
       content,
+      contentType: contentType ?? existing.contentType,
       category,
+      tags: tags ?? '',
+      featuredImage: featuredImage || null,
       readingTime,
       published,
       publishedAt: published && !existing.publishedAt ? new Date() : existing.publishedAt,
+      scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
     },
   })
   return NextResponse.json(post)
