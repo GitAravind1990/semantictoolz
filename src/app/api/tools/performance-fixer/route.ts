@@ -48,13 +48,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Quota exceeded. 50 audits/month for Agency.' }, { status: 429 });
     }
 
-    const cwvResponse = await fetch(
-      `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&key=${GOOGLE_API_KEY}&category=performance`
-    );
+    const psiUrl = new URL('https://www.googleapis.com/pagespeedonline/v5/runPagespeed');
+    psiUrl.searchParams.set('url', url);
+    psiUrl.searchParams.set('category', 'performance');
+    if (GOOGLE_API_KEY) psiUrl.searchParams.set('key', GOOGLE_API_KEY);
+
+    const cwvResponse = await fetch(psiUrl.toString());
     const cwvData = await cwvResponse.json();
 
     if (!cwvData.lighthouseResult) {
-      return NextResponse.json({ error: 'Failed to analyze URL. Check the URL is publicly accessible.' }, { status: 500 });
+      const apiError = cwvData.error?.message ?? JSON.stringify(cwvData).slice(0, 200);
+      console.error('PageSpeed API error:', apiError);
+      return NextResponse.json({ error: `Failed to analyze URL. ${apiError}` }, { status: 500 });
     }
 
     const audits = cwvData.lighthouseResult.audits;
