@@ -97,8 +97,9 @@ model PerformanceFixerAudit {
   fixTime          Int
   fixCost          Float
 
-  fixes      String
-  totalFixes Int
+  fixes           String
+  totalFixes      Int
+  extendedMetrics String? @db.Text
 
   industryAvg  Int?
   industryRank Int?
