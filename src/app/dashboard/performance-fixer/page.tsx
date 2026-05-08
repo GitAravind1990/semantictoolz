@@ -67,20 +67,30 @@ function scoreColor(score: number | null) {
 }
 
 function scoreBg(score: number | null) {
-  if (score == null) return 'bg-slate-100';
+  if (score == null) return 'bg-slate-100 border-slate-200';
   if (score >= 90) return 'bg-green-50 border-green-200';
   if (score >= 50) return 'bg-yellow-50 border-yellow-200';
   return 'bg-red-50 border-red-200';
 }
 
-function MetricCard({ label, value, score, unit = '' }: { label: string; value: string | number | null; score: number | null; unit?: string }) {
+// opportunity = pass/fail audit (no numeric score shown)
+function MetricCard({ label, value, score, unit = '', opportunity = false }: {
+  label: string; value: string | number | null; score: number | null; unit?: string; opportunity?: boolean;
+}) {
+  const statusLabel = opportunity && score != null
+    ? score >= 90 ? 'Pass' : score >= 50 ? 'Needs Work' : 'Flagged'
+    : null;
+
   return (
     <div className={`border rounded-lg p-3 text-center ${scoreBg(score)}`}>
       <div className={`text-lg font-black ${scoreColor(score)}`}>
         {value != null ? `${value}${unit}` : 'N/A'}
       </div>
       <div className="text-[11px] text-slate-500 mt-0.5">{label}</div>
-      {score != null && <div className={`text-[10px] font-bold mt-0.5 ${scoreColor(score)}`}>{score}/100</div>}
+      {opportunity
+        ? statusLabel && <div className={`text-[10px] font-bold mt-0.5 ${scoreColor(score)}`}>{statusLabel}</div>
+        : score != null && <div className={`text-[10px] font-bold mt-0.5 ${scoreColor(score)}`}>{score}/100</div>
+      }
     </div>
   );
 }
@@ -270,12 +280,12 @@ function ResultsDisplay({ result, loadingFixes }: { result: AuditResult; loading
         {/* Opportunities */}
         <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Opportunities & Diagnostics</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <MetricCard label="Unused JS" value={m.unusedJs != null ? Math.round(m.unusedJs / 1024) : null} score={m.unusedJsScore} unit=" KB" />
-          <MetricCard label="Unused CSS" value={m.unusedCss != null ? Math.round(m.unusedCss / 1024) : null} score={m.unusedCssScore} unit=" KB" />
-          <MetricCard label="Render Blocking" value={m.renderBlockingScore != null ? (m.renderBlockingScore >= 90 ? 'Pass' : 'Fail') : null} score={m.renderBlockingScore} />
-          <MetricCard label="Redirects" value={m.redirects != null ? Math.round(m.redirects) : null} score={m.redirectsScore} unit="ms" />
-          <MetricCard label="JS Bootup" value={m.jsBootupTime != null ? Math.round(m.jsBootupTime) : null} score={m.jsBootupScore} unit="ms" />
-          <MetricCard label="Legacy JS" value={m.legacyJsScore != null ? (m.legacyJsScore >= 90 ? 'Pass' : 'Fail') : null} score={m.legacyJsScore} />
+          <MetricCard label="Unused JS" value={m.unusedJs != null ? Math.round(m.unusedJs / 1024) : null} score={m.unusedJsScore} unit=" KB" opportunity />
+          <MetricCard label="Unused CSS" value={m.unusedCss != null ? Math.round(m.unusedCss / 1024) : null} score={m.unusedCssScore} unit=" KB" opportunity />
+          <MetricCard label="Render Blocking" value={null} score={m.renderBlockingScore} opportunity />
+          <MetricCard label="Redirects" value={m.redirects != null ? Math.round(m.redirects) : null} score={m.redirectsScore} unit="ms" opportunity />
+          <MetricCard label="JS Bootup" value={m.jsBootupTime != null ? Math.round(m.jsBootupTime) : null} score={m.jsBootupScore} unit="ms" opportunity />
+          <MetricCard label="Legacy JS" value={null} score={m.legacyJsScore} opportunity />
           <MetricCard label="Page Weight" value={m.totalByteWeight != null ? Math.round(m.totalByteWeight / 1024) : null} score={null} unit=" KB" />
           <MetricCard label="DOM Size" value={m.domSize} score={null} unit=" nodes" />
         </div>
