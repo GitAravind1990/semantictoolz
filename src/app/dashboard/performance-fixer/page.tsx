@@ -54,7 +54,7 @@ interface AuditResult {
   metrics: Metrics;
   projectedScore: number;
   fixes: Fix[];
-  roi: ROI;
+  roi: ROI | null;
   industryData: IndustryData | null;
   auditId: string;
 }
@@ -90,6 +90,7 @@ export default function PerformanceFixerPage() {
   const [url, setUrl] = useState('');
   const [industry, setIndustry] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingFixes, setLoadingFixes] = useState(false);
   const [result, setResult] = useState<AuditResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [userPlan, setUserPlan] = useState<string>('FREE');
@@ -108,21 +109,34 @@ export default function PerformanceFixerPage() {
     setResult(null);
     setError(null);
     try {
-      const response = await fetch('/api/tools/performance-fixer', {
+      // Step 1: fetch PSI metrics (~10-15s)
+      const res1 = await fetch('/api/tools/performance-fixer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url, industry }),
       });
-      const data = await response.json();
-      if (response.ok) {
-        setResult(data);
-      } else {
-        setError(data.error ?? 'Analysis failed');
+      const data1 = await res1.json();
+      if (!res1.ok) { setError(data1.error ?? 'Analysis failed'); return; }
+
+      setResult({ ...data1, fixes: [], roi: null, projectedScore: data1.metrics.overallScore });
+      setLoading(false);
+      setLoadingFixes(true);
+
+      // Step 2: generate AI fixes (~15-20s)
+      const res2 = await fetch('/api/tools/performance-fixer/fixes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ auditId: data1.auditId }),
+      });
+      const data2 = await res2.json();
+      if (res2.ok) {
+        setResult(prev => prev ? { ...prev, fixes: data2.fixes, roi: data2.roi, projectedScore: data2.projectedScore } : prev);
       }
     } catch {
       setError('Network error — please try again');
     } finally {
       setLoading(false);
+      setLoadingFixes(false);
     }
   };
 
@@ -196,21 +210,21 @@ export default function PerformanceFixerPage() {
           </div>
           <button
             onClick={handleAnalyze}
-            disabled={loading || !url}
+            disabled={loading || loadingFixes || !url}
             className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white py-2.5 rounded-lg text-sm font-bold transition-colors"
           >
-            {loading ? '🔍 Analyzing… (this takes ~20s)' : '⚡ Analyze + Get AI Code Fixes'}
+            {loading ? '🔍 Fetching PageSpeed metrics…' : loadingFixes ? '🤖 Generating AI fixes…' : '⚡ Analyze + Get AI Code Fixes'}
           </button>
           {error && <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-2">{error}</div>}
         </div>
 
-        {result && <ResultsDisplay result={result} />}
+        {result && <ResultsDisplay result={result} loadingFixes={loadingFixes} />}
       </div>
     </div>
   );
 }
 
-function ResultsDisplay({ result }: { result: AuditResult }) {
+function ResultsDisplay({ result, loadingFixes }: { result: AuditResult; loadingFixes: boolean }) {
   const m = result.metrics;
   const gain = result.projectedScore - m.overallScore;
 
@@ -267,29 +281,15 @@ function ResultsDisplay({ result }: { result: AuditResult }) {
         </div>
       </div>
 
-      {/* ROI */}
-      <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-100 rounded-xl p-6">
-        <h2 className="text-sm font-bold text-slate-700 mb-4">💰 ROI Calculator</h2>
-        <div className="grid grid-cols-3 gap-4 text-center">
-          <div>
-            <div className="text-2xl font-black text-red-500">${result.roi.currentRevenueLoss}</div>
-            <div className="text-xs text-slate-500 mt-1">Monthly Revenue Loss</div>
-          </div>
-          <div>
-            <div className="text-2xl font-black text-green-600">${result.roi.potentialRevenue}</div>
-            <div className="text-xs text-slate-500 mt-1">Potential Monthly Revenue</div>
-          </div>
-          <div>
-            <div className="text-2xl font-black text-blue-600">{result.roi.fixTime}min</div>
-            <div className="text-xs text-slate-500 mt-1">Est. Time to Fix</div>
-          </div>
-        </div>
-      </div>
-
       {/* AI Fixes */}
       <div className="bg-white border border-slate-200 rounded-xl p-6">
-        <h2 className="text-sm font-bold text-slate-700 mb-4">🤖 AI-Generated Code Fixes ({result.fixes.length})</h2>
-        {result.fixes.length === 0 ? (
+        <h2 className="text-sm font-bold text-slate-700 mb-4">🤖 AI-Generated Code Fixes {!loadingFixes && `(${result.fixes.length})`}</h2>
+        {loadingFixes ? (
+          <div className="text-sm text-slate-500 text-center py-10 bg-slate-50 rounded-lg">
+            <div className="animate-spin text-2xl mb-3">⚙️</div>
+            Generating AI fixes based on your metrics…
+          </div>
+        ) : result.fixes.length === 0 ? (
           <div className="text-sm text-slate-500 text-center py-8 bg-slate-50 rounded-lg">
             No fixes generated. Your site may already be well-optimized, or try re-analyzing.
           </div>
@@ -301,6 +301,27 @@ function ResultsDisplay({ result }: { result: AuditResult }) {
           </div>
         )}
       </div>
+
+      {/* ROI — only shown after fixes load */}
+      {result.roi && (
+        <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-100 rounded-xl p-6">
+          <h2 className="text-sm font-bold text-slate-700 mb-4">💰 ROI Calculator</h2>
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <div className="text-2xl font-black text-red-500">${result.roi.currentRevenueLoss}</div>
+              <div className="text-xs text-slate-500 mt-1">Monthly Revenue Loss</div>
+            </div>
+            <div>
+              <div className="text-2xl font-black text-green-600">${result.roi.potentialRevenue}</div>
+              <div className="text-xs text-slate-500 mt-1">Potential Monthly Revenue</div>
+            </div>
+            <div>
+              <div className="text-2xl font-black text-blue-600">{result.roi.fixTime}min</div>
+              <div className="text-xs text-slate-500 mt-1">Est. Time to Fix</div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Industry Benchmark */}
       {result.industryData && (
