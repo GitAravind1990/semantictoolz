@@ -195,8 +195,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ url, metrics, projectedScore, fixes, roi, industryData, auditId: audit.id });
   } catch (error) {
-    console.error('Performance Fixer error:', error);
-    return NextResponse.json({ error: 'Analysis failed' }, { status: 500 });
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error('Performance Fixer error:', msg);
+    return NextResponse.json({ error: `Analysis failed: ${msg}` }, { status: 500 });
   }
 }
 
@@ -262,8 +263,9 @@ Focus fixes on the worst-scoring metrics first. Return ONLY a valid JSON array, 
 
 function calculateProjectedScore(metrics: ExtendedMetrics, fixes: AIFix[]): number {
   const current = metrics.overallScore;
-  const gain = fixes.reduce((sum, f) => sum + f.estimatedImpact, 0);
-  return Math.min(100, Math.max(0, current + Math.round(gain / fixes.length)));
+  if (fixes.length === 0) return current;
+  const avgGain = fixes.reduce((sum, f) => sum + f.estimatedImpact, 0) / fixes.length;
+  return Math.min(100, Math.max(0, current + Math.round(avgGain)));
 }
 
 function calculateROI(metrics: ExtendedMetrics, projectedScore: number) {
