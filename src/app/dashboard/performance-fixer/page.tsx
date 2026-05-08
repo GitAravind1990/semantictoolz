@@ -132,8 +132,8 @@ export default function PerformanceFixerPage() {
       if (res2.ok) {
         setResult(prev => prev ? { ...prev, fixes: data2.fixes, roi: data2.roi, projectedScore: data2.projectedScore } : prev);
       }
-    } catch {
-      setError('Network error — please try again');
+    } catch (err) {
+      setError(`Request failed: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setLoading(false);
       setLoadingFixes(false);
