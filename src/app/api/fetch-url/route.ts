@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
       .replace(/<[^>]+>/g, ' ')
       .replace(/\s{2,}/g, ' ')
       .trim()
-      .slice(0, 6000)
+      .slice(0, 15000)
 
     if (text.length < 100) throw new Error('Could not extract enough content from that URL')
 
