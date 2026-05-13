@@ -18,8 +18,9 @@ const TOOL_GROUPS = [
   {
     label: 'Pro',
     tools: [
-      { id: 'ideas',     label: 'Content Planner',   icon: '💡', href: '/dashboard/ideas',     minPlan: 'PRO' },
-      { id: 'optimizer', label: 'Content Optimizer', icon: '⚡', href: '/dashboard/optimizer', minPlan: 'PRO' },
+      { id: 'ideas',           label: 'Content Planner',   icon: '💡', href: '/dashboard/ideas',            minPlan: 'PRO' },
+      { id: 'competitor-spy',  label: 'Competitor Spy',    icon: '🔍', href: '/dashboard/competitor-spy',    minPlan: 'PRO' },
+      { id: 'optimizer',       label: 'Content Optimizer', icon: '⚡', href: '/dashboard/optimizer',         minPlan: 'PRO' },
       { id: 'eeat',      label: 'E-E-A-T Analysis',  icon: '🏆', href: '/dashboard/eeat',      minPlan: 'PRO' },
       { id: 'gap',       label: 'Content Gap',       icon: '🕳️', href: '/dashboard/gap',       minPlan: 'PRO' },
       { id: 'citation',  label: 'AI Visibility',     icon: '🔭', href: '/dashboard/citation',  minPlan: 'PRO' },
@@ -72,6 +73,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   function isActive(tool: typeof TOOLS[0]) {
     if (tool.id === 'scores') return pathname === '/dashboard'
     if (tool.id === 'client-reports') return pathname.startsWith('/dashboard/agency')
+    if (tool.id === 'competitor-spy') return pathname.startsWith('/dashboard/competitor-spy')
     return pathname === tool.href
   }
 

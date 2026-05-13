@@ -37,6 +37,8 @@ model User {
   clients              Client[]              @relation("AgencyClients")
   reportTemplates      ReportTemplate[]      @relation("ReportTemplates")
   contentIdeaProjects  ContentIdeaProject[]  @relation("ContentIdeaProjects")
+  competitorAnalyses   CompetitorAnalysis[]  @relation("CompetitorAnalyses")
+  competitorComparisons CompetitorComparison[] @relation("CompetitorComparisons")
 
   @@index([clerkId])
 }
@@ -360,6 +362,67 @@ model ContentIdea {
   @@index([projectId])
   @@index([difficulty])
   @@index([opportunityScore])
+}
+
+model CompetitorAnalysis {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation("CompetitorAnalyses", fields: [userId], references: [id], onDelete: Cascade)
+
+  domainUrl  String
+  domainName String
+
+  estimatedTraffic Int
+  domainAuthority  Float
+  pageAuthority    Float
+  backlinksTotal   Int
+  backlinksNew     Int
+
+  topKeywords  String @db.Text
+  keywordCount Int
+  brandKeywords String @db.Text
+
+  topPages         String @db.Text
+  contentCount     Int
+  avgContentLength Int
+
+  topBacklinks    String @db.Text
+  backlinksSource String @db.Text
+
+  gapKeywords     String @db.Text
+  missingEntities String @db.Text
+  contentOpps     String @db.Text
+
+  aiInsights  String? @db.Text
+
+  dataQuality    String   @default("high")
+  lastAnalyzedAt DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([domainUrl])
+}
+
+model CompetitorComparison {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation("CompetitorComparisons", fields: [userId], references: [id], onDelete: Cascade)
+
+  name       String
+  yourDomain String
+  competitors String @db.Text
+
+  comparisonData String @db.Text
+  keywordOverlap String @db.Text
+  uniqueToYou    String @db.Text
+  uniqueToThem   String @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model ContentCalendar {
