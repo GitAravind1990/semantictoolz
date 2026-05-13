@@ -39,6 +39,7 @@ model User {
   contentIdeaProjects  ContentIdeaProject[]  @relation("ContentIdeaProjects")
   competitorAnalyses   CompetitorAnalysis[]  @relation("CompetitorAnalyses")
   competitorComparisons CompetitorComparison[] @relation("CompetitorComparisons")
+  onPageAnalyses       OnPageAnalysis[]      @relation("OnPageAnalyses")
 
   @@index([clerkId])
 }
@@ -423,6 +424,50 @@ model CompetitorComparison {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+}
+
+model OnPageAnalysis {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation("OnPageAnalyses", fields: [userId], references: [id], onDelete: Cascade)
+
+  content        String  @db.Text
+  targetKeyword  String
+  pageUrl        String?
+  pageTitle      String?
+
+  overallScore   Int
+
+  keywordScore   Int
+  headerScore    Int
+  metaScore      Int
+  imageScore     Int
+  linkScore      Int
+  readabilityScore Int
+
+  keywordDensity   Float
+  keywordCount     Int
+  wordCount        Int
+  keywordData      String @db.Text
+
+  headers          String @db.Text
+  metaTags         String @db.Text
+  images           String @db.Text
+  links            String @db.Text
+  readabilityData  String @db.Text
+
+  fixes            String @db.Text
+  appliedFixes     String @db.Text
+
+  version          Int      @default(1)
+  previousScore    Int?
+
+  analyzedAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId])
+  @@index([targetKeyword])
 }
 
 model ContentCalendar {

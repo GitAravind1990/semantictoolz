@@ -13,6 +13,7 @@ const TOOL_GROUPS = [
     label: 'Free',
     tools: [
       { id: 'scores', label: 'Content Analyzer', icon: '📊', href: '/dashboard', minPlan: 'FREE' },
+      { id: 'onpage', label: 'On-Page SEO', icon: '🔍', href: '/dashboard/onpage', minPlan: 'FREE' },
     ],
   },
   {
@@ -74,6 +75,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (tool.id === 'scores') return pathname === '/dashboard'
     if (tool.id === 'client-reports') return pathname.startsWith('/dashboard/agency')
     if (tool.id === 'competitor-spy') return pathname.startsWith('/dashboard/competitor-spy')
+    if (tool.id === 'onpage') return pathname.startsWith('/dashboard/onpage')
     return pathname === tool.href
   }
 

@@ -7,9 +7,9 @@ export const PLAN_LIMITS: Record<Plan, number> = {
 }
 
 export const PLAN_TOOLS: Record<Plan, string[]> = {
-  FREE: ['analyse'],
-  PRO: ['analyse', 'optimizer', 'eeat', 'backlinks', 'citation', 'gap', 'queries', 'rewrite', 'content-ideas', 'competitor-spy'],
-  AGENCY: ['analyse', 'optimizer', 'eeat', 'backlinks', 'citation', 'gap', 'queries', 'rewrite', 'serp', 'topical', 'local', 'tracker', 'content-ideas', 'competitor-spy'],
+  FREE: ['analyse', 'onpage'],
+  PRO: ['analyse', 'onpage', 'optimizer', 'eeat', 'backlinks', 'citation', 'gap', 'queries', 'rewrite', 'content-ideas', 'competitor-spy'],
+  AGENCY: ['analyse', 'onpage', 'optimizer', 'eeat', 'backlinks', 'citation', 'gap', 'queries', 'rewrite', 'serp', 'topical', 'local', 'tracker', 'content-ideas', 'competitor-spy'],
 }
 
 export function canUseTool(plan: Plan, tool: string): boolean {
