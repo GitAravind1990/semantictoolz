@@ -40,6 +40,7 @@ model User {
   competitorAnalyses   CompetitorAnalysis[]  @relation("CompetitorAnalyses")
   competitorComparisons CompetitorComparison[] @relation("CompetitorComparisons")
   onPageAnalyses       OnPageAnalysis[]      @relation("OnPageAnalyses")
+  rankTrackingProjects RankTrackingProject[] @relation("RankTrackingProjects")
 
   @@index([clerkId])
 }
@@ -486,4 +487,98 @@ model ContentCalendar {
 
   @@index([projectId])
   @@index([publishDate])
+}
+
+model RankTrackingProject {
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation("RankTrackingProjects", fields: [userId], references: [id], onDelete: Cascade)
+
+  name           String
+  domain         String
+  targetLocation String    @default("US")
+  deviceType     String    @default("desktop")
+
+  trackKeywords  String    @db.Text
+  updateFrequency String   @default("daily")
+  lastUpdatedAt  DateTime?
+
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  keywords       RankTrackingKeyword[]
+  history        RankHistory[]
+  alerts         RankAlert[]
+
+  @@index([userId])
+  @@index([domain])
+}
+
+model RankTrackingKeyword {
+  id        String              @id @default(cuid())
+  projectId String
+  project   RankTrackingProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  keyword          String
+  searchVolume     Int?
+  difficulty       Int?
+
+  currentRank      Int?
+  currentUrl       String?
+
+  rankChange30d    Int?
+  rankChange7d     Int?
+  rankTrendPercent Float?
+
+  status      String    @default("tracking")
+  achievedRank Int?
+  notes        String?  @db.Text
+  lastRanked   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  history RankHistory[]
+
+  @@index([projectId])
+  @@index([currentRank])
+  @@unique([projectId, keyword])
+}
+
+model RankHistory {
+  id        String              @id @default(cuid())
+  projectId String
+  project   RankTrackingProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  keywordId   String
+  keyword     RankTrackingKeyword @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+
+  rank        Int?
+  url         String?
+  searchVolume Int?
+  checkedDate  DateTime @default(now())
+
+  @@index([projectId])
+  @@index([keywordId])
+  @@index([checkedDate])
+  @@unique([keywordId, checkedDate])
+}
+
+model RankAlert {
+  id        String              @id @default(cuid())
+  projectId String
+  project   RankTrackingProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  keyword    String
+  alertType  String   // "position_drop", "position_gain", "first_page", "top_3", "lost_ranking"
+  threshold  Int?
+  oldRank    Int?
+  newRank    Int?
+  message    String   @db.Text
+  read       Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([projectId])
+  @@index([read])
 }

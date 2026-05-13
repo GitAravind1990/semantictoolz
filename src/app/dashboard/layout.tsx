@@ -20,6 +20,7 @@ const TOOL_GROUPS = [
     label: 'Pro',
     tools: [
       { id: 'ideas',           label: 'Content Planner',   icon: '💡', href: '/dashboard/ideas',            minPlan: 'PRO' },
+      { id: 'rank-tracker',    label: 'Rank Tracker',      icon: '📈', href: '/dashboard/rank-tracker',      minPlan: 'PRO' },
       { id: 'competitor-spy',  label: 'Competitor Spy',    icon: '🔍', href: '/dashboard/competitor-spy',    minPlan: 'PRO' },
       { id: 'optimizer',       label: 'Content Optimizer', icon: '⚡', href: '/dashboard/optimizer',         minPlan: 'PRO' },
       { id: 'eeat',      label: 'E-E-A-T Analysis',  icon: '🏆', href: '/dashboard/eeat',      minPlan: 'PRO' },
@@ -76,6 +77,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (tool.id === 'client-reports') return pathname.startsWith('/dashboard/agency')
     if (tool.id === 'competitor-spy') return pathname.startsWith('/dashboard/competitor-spy')
     if (tool.id === 'onpage') return pathname.startsWith('/dashboard/onpage')
+    if (tool.id === 'rank-tracker') return pathname.startsWith('/dashboard/rank-tracker')
     return pathname === tool.href
   }
 
