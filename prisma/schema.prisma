@@ -41,6 +41,7 @@ model User {
   competitorComparisons CompetitorComparison[] @relation("CompetitorComparisons")
   onPageAnalyses       OnPageAnalysis[]      @relation("OnPageAnalyses")
   rankTrackingProjects RankTrackingProject[] @relation("RankTrackingProjects")
+  localSEOAccounts     LocalSEOAccount[]     @relation("LocalSEOAccounts")
 
   @@index([clerkId])
 }
@@ -581,4 +582,177 @@ model RankAlert {
 
   @@index([projectId])
   @@index([read])
+}
+
+model LocalSEOAccount {
+  id          String @id @default(cuid())
+  userId      String
+  user        User   @relation("LocalSEOAccounts", fields: [userId], references: [id], onDelete: Cascade)
+
+  name        String
+  accountType String @default("multi-location")
+  gbpConnected Boolean @default(false)
+  gbpEmail    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  locations LocalSEOLocation[]
+  reviews   LocalReview[]
+  citations LocalCitation[]
+  tasks     LocalSEOTask[]
+
+  @@index([userId])
+}
+
+model LocalSEOLocation {
+  id        String          @id @default(cuid())
+  accountId String
+  account   LocalSEOAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  name    String
+  address String
+  city    String
+  state   String
+  zipCode String
+  phone   String
+  website String?
+
+  gbpId    String?
+  gmapsUrl String?
+
+  averageRating Float?
+  reviewCount   Int?
+
+  localKeywords String @db.Text
+
+  pageViews  Int?
+  calls      Int?
+  directions Int?
+
+  citationScore Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  keywords  LocalKeywordRank[]
+  reviews   LocalReview[]
+  citations LocalCitation[]
+
+  @@index([accountId])
+  @@index([city])
+  @@unique([accountId, gbpId])
+}
+
+model LocalKeywordRank {
+  id         String           @id @default(cuid())
+  locationId String
+  location   LocalSEOLocation @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  keyword    String
+  searchType String @default("local")
+
+  currentRank  Int?
+  previousRank Int?
+
+  rankChange7d  Int?
+  rankChange30d Int?
+
+  searchVolume Int?
+  difficulty   Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  history LocalRankHistory[]
+
+  @@index([locationId])
+  @@index([currentRank])
+  @@unique([locationId, keyword, searchType])
+}
+
+model LocalRankHistory {
+  id        String           @id @default(cuid())
+  keywordId String
+  keyword   LocalKeywordRank @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+
+  rank        Int?
+  checkedDate DateTime @default(now())
+
+  @@index([keywordId])
+  @@index([checkedDate])
+  @@unique([keywordId, checkedDate])
+}
+
+model LocalReview {
+  id        String          @id @default(cuid())
+  accountId String
+  account   LocalSEOAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  locationId String
+  location   LocalSEOLocation @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  source    String
+  reviewText String @db.Text
+  rating    Int
+  author    String?
+
+  responded    Boolean @default(false)
+  responseText String? @db.Text
+
+  flaggedAsNegative Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  reviewedDate      DateTime?
+
+  @@index([accountId])
+  @@index([locationId])
+  @@index([rating])
+}
+
+model LocalCitation {
+  id        String          @id @default(cuid())
+  accountId String
+  account   LocalSEOAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  locationId String
+  location   LocalSEOLocation @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  source          String
+  sourceUrl       String
+  businessName    String
+  businessPhone   String
+  businessAddress String
+
+  nameMatches    Boolean @default(true)
+  phoneMatches   Boolean @default(true)
+  addressMatches Boolean @default(true)
+
+  status           String  @default("verified")
+  issueDescription String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([accountId])
+  @@index([locationId])
+  @@unique([accountId, locationId, source])
+}
+
+model LocalSEOTask {
+  id        String          @id @default(cuid())
+  accountId String
+  account   LocalSEOAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  locationId  String?
+  title       String
+  description String? @db.Text
+  category    String
+  priority    String
+  status      String  @default("open")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([accountId])
+  @@index([status])
 }

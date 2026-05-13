@@ -32,6 +32,7 @@ const TOOL_GROUPS = [
   {
     label: 'Agency',
     tools: [
+      { id: 'local-seo',           label: 'Local SEO Suite',      icon: '📍', href: '/dashboard/local-seo',          minPlan: 'AGENCY' },
       { id: 'serp',                label: 'SERP Audit',           icon: '📈', href: '/dashboard/serp',                minPlan: 'AGENCY' },
       { id: 'topical',             label: 'Topical Authority',    icon: '🗺️', href: '/dashboard/topical',             minPlan: 'AGENCY' },
       { id: 'local',               label: 'Local SEO',            icon: '📍', href: '/dashboard/local',               minPlan: 'AGENCY' },
@@ -78,6 +79,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (tool.id === 'competitor-spy') return pathname.startsWith('/dashboard/competitor-spy')
     if (tool.id === 'onpage') return pathname.startsWith('/dashboard/onpage')
     if (tool.id === 'rank-tracker') return pathname.startsWith('/dashboard/rank-tracker')
+    if (tool.id === 'local-seo') return pathname.startsWith('/dashboard/local-seo')
     return pathname === tool.href
   }
 
