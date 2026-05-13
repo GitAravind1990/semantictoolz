@@ -18,6 +18,7 @@ const TOOL_GROUPS = [
   {
     label: 'Pro',
     tools: [
+      { id: 'ideas',     label: 'Content Planner',   icon: '💡', href: '/dashboard/ideas',     minPlan: 'PRO' },
       { id: 'optimizer', label: 'Content Optimizer', icon: '⚡', href: '/dashboard/optimizer', minPlan: 'PRO' },
       { id: 'eeat',      label: 'E-E-A-T Analysis',  icon: '🏆', href: '/dashboard/eeat',      minPlan: 'PRO' },
       { id: 'gap',       label: 'Content Gap',       icon: '🕳️', href: '/dashboard/gap',       minPlan: 'PRO' },

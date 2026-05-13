@@ -36,6 +36,7 @@ model User {
   contentOptimizations ContentOptimization[]
   clients              Client[]              @relation("AgencyClients")
   reportTemplates      ReportTemplate[]      @relation("ReportTemplates")
+  contentIdeaProjects  ContentIdeaProject[]  @relation("ContentIdeaProjects")
 
   @@index([clerkId])
 }
@@ -295,4 +296,86 @@ model ContentOptimizationFix {
   createdAt DateTime @default(now())
 
   @@index([optimizationId])
+}
+
+model ContentIdeaProject {
+  id             String @id @default(cuid())
+  userId         String
+  user           User   @relation("ContentIdeaProjects", fields: [userId], references: [id], onDelete: Cascade)
+
+  name           String
+  industry       String
+  targetAudience String
+  seedKeywords   String @db.Text
+  competitors    String @db.Text
+
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  ideas     ContentIdea[]
+  calendar  ContentCalendar[]
+
+  @@index([userId])
+}
+
+model ContentIdea {
+  id        String             @id @default(cuid())
+  projectId String
+  project   ContentIdeaProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  title       String
+  slug        String
+  description String?
+
+  primaryKeyword  String
+  relatedKeywords String @db.Text
+  searchVolume    Int
+  difficulty      Int
+  cpc             Float?
+
+  contentType     String
+  estimatedLength Int
+  sections        String @db.Text
+
+  entitiesNeeded String @db.Text
+  lsiKeywords    String @db.Text
+  semanticGaps   String @db.Text
+
+  eeatScore        Int
+  competitorCount  Int
+  opportunityScore Int
+
+  status     String    @default("idea")
+  assignedTo String?
+  dueDate    DateTime?
+
+  aiOutline String? @db.Text
+  aiIntro   String? @db.Text
+
+  pinned Boolean @default(false)
+  notes  String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([difficulty])
+  @@index([opportunityScore])
+}
+
+model ContentCalendar {
+  id        String             @id @default(cuid())
+  projectId String
+  project   ContentIdeaProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  ideaId    String?
+
+  title       String
+  publishDate DateTime
+  status      String   @default("planned")
+  notes       String?  @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([publishDate])
 }
