@@ -34,8 +34,84 @@ model User {
   usage                Usage[]
   performanceAudits    PerformanceFixerAudit[]
   contentOptimizations ContentOptimization[]
+  clients              Client[]              @relation("AgencyClients")
+  reportTemplates      ReportTemplate[]      @relation("ReportTemplates")
 
   @@index([clerkId])
+}
+
+model Client {
+  id       String @id @default(cuid())
+  agencyId String
+  agency   User   @relation("AgencyClients", fields: [agencyId], references: [id], onDelete: Cascade)
+
+  name     String
+  email    String
+  website  String
+  industry String?
+
+  reportTemplate String @default("standard")
+  brandColor     String @default("#6366f1")
+  logoUrl        String?
+
+  trackKeywords String @db.Text
+  competitors   String @db.Text
+
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  reports   ClientReport[]
+
+  @@index([agencyId])
+}
+
+model ClientReport {
+  id       String @id @default(cuid())
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  month Int
+  year  Int
+
+  keywordRankings String @db.Text
+  trafficChange   Int
+  backlinksAdded  Int
+  topPerformers   String @db.Text
+
+  domainAuthority Float @default(45)
+  pageAuthority   Float @default(52)
+  backlinksTotal  Int   @default(500)
+
+  reportHtml   String    @db.Text
+  reportPdfUrl String?
+
+  emailSent      Boolean   @default(false)
+  emailSentAt    DateTime?
+  clientViewed   Boolean   @default(false)
+  clientViewedAt DateTime?
+
+  generatedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([clientId])
+  @@index([month])
+}
+
+model ReportTemplate {
+  id       String @id @default(cuid())
+  agencyId String
+  agency   User   @relation("ReportTemplates", fields: [agencyId], references: [id], onDelete: Cascade)
+
+  name        String
+  description String?
+  sections    String  @db.Text
+  customText  String? @db.Text
+  footerText  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([agencyId])
 }
 
 model Subscription {

@@ -33,6 +33,7 @@ const TOOL_GROUPS = [
       { id: 'local',               label: 'Local SEO',            icon: '📍', href: '/dashboard/local',               minPlan: 'AGENCY' },
       { id: 'tracker',             label: 'Cite Tracker',         icon: '🎯', href: '/dashboard/tracker',             minPlan: 'AGENCY' },
       { id: 'performance-fixer',   label: 'AI Performance Fixer', icon: '⚡', href: '/dashboard/performance-fixer',   minPlan: 'AGENCY' },
+      { id: 'client-reports',      label: 'Client Reports',       icon: '📋', href: '/dashboard/agency/clients',      minPlan: 'AGENCY' },
     ],
   },
 ]
@@ -69,6 +70,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   function isActive(tool: typeof TOOLS[0]) {
     if (tool.id === 'scores') return pathname === '/dashboard'
+    if (tool.id === 'client-reports') return pathname.startsWith('/dashboard/agency')
     return pathname === tool.href
   }
 
