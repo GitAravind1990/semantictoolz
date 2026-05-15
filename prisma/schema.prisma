@@ -43,6 +43,7 @@ model User {
   rankTrackingProjects RankTrackingProject[] @relation("RankTrackingProjects")
   localSEOAccounts     LocalSEOAccount[]     @relation("LocalSEOAccounts")
   llmVisibilityAnalyses LLMVisibilityAnalysis[] @relation("LLMVisibilityAnalyses")
+  backlinkProjects     BacklinkProject[]     @relation("BacklinkProjects")
 
   @@index([clerkId])
 }
@@ -832,6 +833,56 @@ model LLMQueryTest {
 
   @@index([analysisId])
   @@index([retrievalScore])
+}
+
+model BacklinkProject {
+  id           String @id @default(cuid())
+  userId       String
+  user         User   @relation("BacklinkProjects", fields: [userId], references: [id], onDelete: Cascade)
+
+  name         String
+  domain       String
+  niche        String
+  targetKeywords String @db.Text
+  contentBrief   String @db.Text
+
+  totalOpportunities Int @default(0)
+  contactedCount     Int @default(0)
+  securedCount       Int @default(0)
+
+  aiSummary    String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  opportunities BacklinkOpportunity[]
+
+  @@index([userId])
+}
+
+model BacklinkOpportunity {
+  id        String         @id @default(cuid())
+  projectId String
+  project   BacklinkProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  siteName        String
+  siteUrl         String
+  domainAuthority String
+  linkType        String
+  angle           String  @db.Text
+  whyRelevant     String  @db.Text
+  contactApproach String  @db.Text
+  difficulty      String
+  impact          String
+
+  status  String @default("prospecting")
+  notes   String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([status])
 }
 
 model LocalSEOTask {

@@ -82,6 +82,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (tool.id === 'rank-tracker') return pathname.startsWith('/dashboard/rank-tracker')
     if (tool.id === 'local-seo') return pathname.startsWith('/dashboard/local-seo')
     if (tool.id === 'llm-visibility') return pathname.startsWith('/dashboard/optimizer/llm-visibility')
+    if (tool.id === 'backlinks') return pathname.startsWith('/dashboard/backlinks')
     return pathname === tool.href
   }
 
