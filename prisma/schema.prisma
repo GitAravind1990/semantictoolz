@@ -42,6 +42,7 @@ model User {
   onPageAnalyses       OnPageAnalysis[]      @relation("OnPageAnalyses")
   rankTrackingProjects RankTrackingProject[] @relation("RankTrackingProjects")
   localSEOAccounts     LocalSEOAccount[]     @relation("LocalSEOAccounts")
+  llmVisibilityAnalyses LLMVisibilityAnalysis[] @relation("LLMVisibilityAnalyses")
 
   @@index([clerkId])
 }
@@ -736,6 +737,101 @@ model LocalCitation {
   @@index([accountId])
   @@index([locationId])
   @@unique([accountId, locationId, source])
+}
+
+model LLMVisibilityAnalysis {
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation("LLMVisibilityAnalyses", fields: [userId], references: [id], onDelete: Cascade)
+
+  websiteUrl      String
+  domain          String
+
+  llmVisibilityScore Int
+  semanticRelevance Int
+  retrievalLikelihood Int
+  contentStructure Int
+  answerability   Int
+  technicalAccess Int
+
+  pagesAnalyzed   Int
+  totalWords      Int
+
+  topicsFound     Int
+  entitiesFound   Int
+  faqSections     Int
+
+  criticalGaps    String    @db.Text
+  warnings        String    @db.Text
+  opportunities   String    @db.Text
+  recommendations String    @db.Text
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  pages           LLMVisibilityPage[]
+  queryTests      LLMQueryTest[]
+
+  @@index([userId])
+  @@index([llmVisibilityScore])
+}
+
+model LLMVisibilityPage {
+  id              String    @id @default(cuid())
+  analysisId      String
+  analysis        LLMVisibilityAnalysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  url             String
+  title           String
+
+  pageScore       Int
+  semanticScore   Int
+  structureScore  Int
+  answerScore     Int
+
+  wordCount       Int
+  headingCount    Int
+  listCount       Int
+  faqCount        Int
+
+  mainTopic       String?
+  subtopics       String    @db.Text
+  entities        String    @db.Text
+
+  retrievable     Boolean
+  retrievalReason String?
+
+  issues          String    @db.Text
+
+  createdAt       DateTime  @default(now())
+
+  @@index([analysisId])
+  @@index([pageScore])
+}
+
+model LLMQueryTest {
+  id              String    @id @default(cuid())
+  analysisId      String
+  analysis        LLMVisibilityAnalysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  query           String
+  queryType       String
+
+  retrieved       Boolean
+  retrievalScore  Float
+
+  topRetrievedPage String?
+  topRetrievedChunk String? @db.Text
+
+  answer          String?   @db.Text
+  answerQuality   Int?
+
+  missingContent  String    @db.Text
+
+  createdAt       DateTime  @default(now())
+
+  @@index([analysisId])
+  @@index([retrievalScore])
 }
 
 model LocalSEOTask {

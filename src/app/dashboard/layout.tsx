@@ -25,8 +25,9 @@ const TOOL_GROUPS = [
       { id: 'optimizer',       label: 'Content Optimizer', icon: '⚡', href: '/dashboard/optimizer',         minPlan: 'PRO' },
       { id: 'eeat',      label: 'E-E-A-T Analysis',  icon: '🏆', href: '/dashboard/eeat',      minPlan: 'PRO' },
       { id: 'gap',       label: 'Content Gap',       icon: '🕳️', href: '/dashboard/gap',       minPlan: 'PRO' },
-      { id: 'citation',  label: 'AI Visibility',     icon: '🔭', href: '/dashboard/citation',  minPlan: 'PRO' },
-      { id: 'backlinks', label: 'Backlinks',         icon: '🔗', href: '/dashboard/backlinks', minPlan: 'PRO' },
+      { id: 'citation',      label: 'AI Visibility',     icon: '🔭', href: '/dashboard/citation',                      minPlan: 'PRO' },
+      { id: 'llm-visibility', label: 'LLM Visibility',  icon: '🤖', href: '/dashboard/optimizer/llm-visibility',         minPlan: 'PRO' },
+      { id: 'backlinks',     label: 'Backlinks',         icon: '🔗', href: '/dashboard/backlinks',                        minPlan: 'PRO' },
     ],
   },
   {
@@ -80,6 +81,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (tool.id === 'onpage') return pathname.startsWith('/dashboard/onpage')
     if (tool.id === 'rank-tracker') return pathname.startsWith('/dashboard/rank-tracker')
     if (tool.id === 'local-seo') return pathname.startsWith('/dashboard/local-seo')
+    if (tool.id === 'llm-visibility') return pathname.startsWith('/dashboard/optimizer/llm-visibility')
     return pathname === tool.href
   }
 
