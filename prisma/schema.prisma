@@ -44,6 +44,7 @@ model User {
   localSEOAccounts     LocalSEOAccount[]     @relation("LocalSEOAccounts")
   llmVisibilityAnalyses LLMVisibilityAnalysis[] @relation("LLMVisibilityAnalyses")
   backlinkProjects     BacklinkProject[]     @relation("BacklinkProjects")
+  backlinkAnalyses     BacklinkDomainAnalysis[] @relation("BacklinkDomainAnalyses")
 
   @@index([clerkId])
 }
@@ -833,6 +834,38 @@ model LLMQueryTest {
 
   @@index([analysisId])
   @@index([retrievalScore])
+}
+
+model BacklinkDomainAnalysis {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation("BacklinkDomainAnalyses", fields: [userId], references: [id], onDelete: Cascade)
+
+  domain String
+
+  // Overview metrics
+  backlinksTotal      Int @default(0)
+  dofollowLinks       Int @default(0)
+  nofollowLinks       Int @default(0)
+  referringDomains    Int @default(0)
+  referringIPs        Int @default(0)
+  spamScore           Int @default(0)
+  brokenBacklinks     Int @default(0)
+  newBacklinks14d     Int @default(0)
+  lostBacklinks14d    Int @default(0)
+  newReferringDomains14d Int @default(0)
+  lostReferringDomains14d Int @default(0)
+  domainRank          Int @default(0)
+
+  // Cached JSON arrays
+  topBacklinks        String @db.Text
+  topReferringDomains String @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([domain])
 }
 
 model BacklinkProject {

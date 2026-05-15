@@ -3,6 +3,26 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
+// ─── Types ──────────────────────────────────────────────────────────────────
+
+type DomainAnalysis = {
+  id: string
+  domain: string
+  backlinksTotal: number
+  dofollowLinks: number
+  nofollowLinks: number
+  referringDomains: number
+  referringIPs: number
+  spamScore: number
+  domainRank: number
+  newBacklinks14d: number
+  lostBacklinks14d: number
+  newReferringDomains14d: number
+  lostReferringDomains14d: number
+  brokenBacklinks: number
+  createdAt: string
+}
+
 type ProjectSummary = {
   id: string
   name: string
@@ -20,6 +40,103 @@ const NICHE_EXAMPLES = [
   'Marketing / SEO', 'E-commerce / Retail', 'Education / EdTech',
 ]
 
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+function spamColor(score: number) {
+  if (score <= 20) return 'text-green-600'
+  if (score <= 50) return 'text-amber-600'
+  return 'text-red-600'
+}
+
+function fmt(n: number): string {
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M'
+  if (n >= 1_000) return (n / 1_000).toFixed(1) + 'K'
+  return n.toString()
+}
+
+// ─── Domain Analysis Card ───────────────────────────────────────────────────
+
+function AnalysisCard({ a, onDelete }: { a: DomainAnalysis; onDelete: (id: string) => void }) {
+  const [deleting, setDeleting] = useState(false)
+  const dofollowPct = a.backlinksTotal > 0 ? Math.round((a.dofollowLinks / a.backlinksTotal) * 100) : 0
+
+  async function handleDelete() {
+    setDeleting(true)
+    await fetch(`/api/tools/backlinks/domain-analysis/${a.id}`, { method: 'DELETE' })
+    onDelete(a.id)
+  }
+
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition-shadow">
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <div>
+          <div className="font-bold text-slate-800 text-base">{a.domain}</div>
+          <div className="text-xs text-slate-400 mt-0.5">{new Date(a.createdAt).toLocaleDateString()}</div>
+        </div>
+        <div className="text-right">
+          <div className="text-xs text-slate-400">Domain Rank</div>
+          <div className="text-2xl font-black text-blue-600">#{a.domainRank > 0 ? fmt(a.domainRank) : '—'}</div>
+        </div>
+      </div>
+
+      {/* Core metrics */}
+      <div className="grid grid-cols-3 gap-2 mb-3">
+        <div className="bg-blue-50 rounded-lg p-2 text-center">
+          <div className="text-lg font-bold text-blue-700">{fmt(a.backlinksTotal)}</div>
+          <div className="text-[10px] text-slate-500">Backlinks</div>
+        </div>
+        <div className="bg-slate-50 rounded-lg p-2 text-center">
+          <div className="text-lg font-bold text-slate-700">{fmt(a.referringDomains)}</div>
+          <div className="text-[10px] text-slate-500">Ref. Domains</div>
+        </div>
+        <div className="bg-slate-50 rounded-lg p-2 text-center">
+          <div className={`text-lg font-bold ${spamColor(a.spamScore)}`}>{a.spamScore}</div>
+          <div className="text-[10px] text-slate-500">Spam Score</div>
+        </div>
+      </div>
+
+      {/* Dofollow bar */}
+      <div className="mb-3">
+        <div className="flex justify-between text-[10px] text-slate-400 mb-1">
+          <span>Dofollow {dofollowPct}%</span>
+          <span>Nofollow {100 - dofollowPct}%</span>
+        </div>
+        <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden flex">
+          <div className="h-full bg-green-500" style={{ width: `${dofollowPct}%` }} />
+          <div className="h-full bg-slate-300" style={{ width: `${100 - dofollowPct}%` }} />
+        </div>
+      </div>
+
+      {/* 14-day delta */}
+      <div className="grid grid-cols-2 gap-2 mb-4 text-xs">
+        <div className="flex items-center gap-1.5">
+          <span className="text-green-500 font-bold">+{fmt(a.newBacklinks14d)}</span>
+          <span className="text-slate-400">new links (14d)</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-red-400 font-bold">-{fmt(a.lostBacklinks14d)}</span>
+          <span className="text-slate-400">lost links (14d)</span>
+        </div>
+      </div>
+
+      <div className="flex gap-2">
+        <Link
+          href={`/dashboard/backlinks/analysis/${a.id}`}
+          className="flex-1 text-center text-xs px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors font-medium"
+        >
+          📊 Full Report
+        </Link>
+        <button onClick={handleDelete} disabled={deleting}
+          className="text-xs px-3 py-1.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors">
+          {deleting ? '...' : 'Delete'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ─── AI Project Card ─────────────────────────────────────────────────────────
+
 function ProjectCard({ p, onDelete }: { p: ProjectSummary; onDelete: (id: string) => void }) {
   const [deleting, setDeleting] = useState(false)
   const total = p.totalOpportunities
@@ -31,65 +148,28 @@ function ProjectCard({ p, onDelete }: { p: ProjectSummary; onDelete: (id: string
   }
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between gap-3 mb-3">
+    <div className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-sm transition-shadow">
+      <div className="flex items-start justify-between gap-2 mb-2">
         <div>
-          <div className="font-bold text-slate-800 text-base">{p.name}</div>
-          <div className="text-xs text-slate-500">{p.domain} · {p.niche}</div>
-          <div className="text-xs text-slate-400 mt-0.5">{new Date(p.createdAt).toLocaleDateString()}</div>
+          <div className="font-semibold text-slate-800 text-sm">{p.name}</div>
+          <div className="text-xs text-slate-400">{p.domain} · {p.niche}</div>
         </div>
         <div className="text-right">
-          <div className="text-2xl font-black text-green-600">{p.securedCount}</div>
+          <div className="text-xl font-black text-green-600">{p.securedCount}</div>
           <div className="text-[10px] text-slate-400">secured</div>
         </div>
       </div>
-
-      <div className="grid grid-cols-3 gap-2 mb-3">
-        <div className="bg-slate-50 rounded-lg p-2 text-center">
-          <div className="text-lg font-bold text-slate-700">{total}</div>
-          <div className="text-[10px] text-slate-400">Opportunities</div>
-        </div>
-        <div className="bg-blue-50 rounded-lg p-2 text-center">
-          <div className="text-lg font-bold text-blue-600">{p.contactedCount}</div>
-          <div className="text-[10px] text-slate-400">Contacted</div>
-        </div>
-        <div className="bg-green-50 rounded-lg p-2 text-center">
-          <div className="text-lg font-bold text-green-600">{p.securedCount}</div>
-          <div className="text-[10px] text-slate-400">Secured</div>
-        </div>
+      <div className="flex gap-2 text-xs text-slate-500 mb-3">
+        <span className="bg-slate-100 rounded px-2 py-0.5">{total} opportunities</span>
+        <span className="bg-blue-50 text-blue-600 rounded px-2 py-0.5">{p.contactedCount} contacted</span>
       </div>
-
-      {total > 0 && (
-        <div className="mb-3">
-          <div className="flex justify-between text-[10px] text-slate-400 mb-1">
-            <span>Outreach progress</span>
-            <span>{Math.round((p.contactedCount / total) * 100)}% contacted</span>
-          </div>
-          <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
-            <div
-              className="h-full rounded-full bg-blue-400"
-              style={{ width: `${(p.contactedCount / total) * 100}%` }}
-            />
-          </div>
-        </div>
-      )}
-
-      {p.aiSummary && (
-        <p className="text-xs text-slate-500 mb-3 line-clamp-2">{p.aiSummary}</p>
-      )}
-
       <div className="flex gap-2">
-        <Link
-          href={`/dashboard/backlinks/${p.id}`}
-          className="flex-1 text-center text-xs px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors font-medium"
-        >
-          🔗 View Opportunities
+        <Link href={`/dashboard/backlinks/${p.id}`}
+          className="flex-1 text-center text-xs px-3 py-1.5 rounded-lg bg-slate-700 text-white hover:bg-slate-800 transition-colors font-medium">
+          🔗 Manage Outreach
         </Link>
-        <button
-          onClick={handleDelete}
-          disabled={deleting}
-          className="text-xs px-3 py-1.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-        >
+        <button onClick={handleDelete} disabled={deleting}
+          className="text-xs px-3 py-1.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors">
           {deleting ? '...' : 'Delete'}
         </button>
       </div>
@@ -97,35 +177,74 @@ function ProjectCard({ p, onDelete }: { p: ProjectSummary; onDelete: (id: string
   )
 }
 
-export function BacklinksClient() {
-  const [projects, setProjects] = useState<ProjectSummary[]>([])
-  const [loading, setLoading] = useState(true)
-  const [showForm, setShowForm] = useState(false)
-  const [generating, setGenerating] = useState(false)
-  const [error, setError] = useState('')
+// ─── Main Page ───────────────────────────────────────────────────────────────
 
+export function BacklinksClient() {
+  const [tab, setTab] = useState<'data' | 'outreach'>('data')
+
+  // Real data state
+  const [analyses, setAnalyses] = useState<DomainAnalysis[]>([])
+  const [loadingAnalyses, setLoadingAnalyses] = useState(true)
+  const [domainInput, setDomainInput] = useState('')
+  const [analyzing, setAnalyzing] = useState(false)
+  const [analyzeError, setAnalyzeError] = useState('')
+
+  // Outreach state
+  const [projects, setProjects] = useState<ProjectSummary[]>([])
+  const [loadingProjects, setLoadingProjects] = useState(true)
+  const [showProjectForm, setShowProjectForm] = useState(false)
+  const [generating, setGenerating] = useState(false)
+  const [projectError, setProjectError] = useState('')
   const [name, setName] = useState('')
   const [domain, setDomain] = useState('')
   const [niche, setNiche] = useState('')
   const [keywords, setKeywords] = useState('')
   const [brief, setBrief] = useState('')
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { loadAnalyses(); loadProjects() }, [])
 
-  async function load() {
-    setLoading(true)
+  async function loadAnalyses() {
+    setLoadingAnalyses(true)
+    const r = await fetch('/api/tools/backlinks/domain-analysis')
+    const d = await r.json()
+    if (Array.isArray(d)) setAnalyses(d)
+    setLoadingAnalyses(false)
+  }
+
+  async function loadProjects() {
+    setLoadingProjects(true)
     const r = await fetch('/api/tools/backlinks')
     const d = await r.json()
     if (Array.isArray(d)) setProjects(d)
-    setLoading(false)
+    setLoadingProjects(false)
   }
 
-  async function generate() {
-    if (!name.trim() || !domain.trim() || !niche.trim()) {
-      setError('Project name, domain and niche are required')
-      return
+  async function runAnalysis() {
+    if (!domainInput.trim()) { setAnalyzeError('Enter a domain'); return }
+    setAnalyzeError('')
+    setAnalyzing(true)
+    try {
+      const r = await fetch('/api/tools/backlinks/domain-analysis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain: domainInput.trim() }),
+      })
+      const d = await r.json()
+      if (!r.ok) throw new Error(d.error || 'Analysis failed')
+      setDomainInput('')
+      loadAnalyses()
+    } catch (e: unknown) {
+      setAnalyzeError(e instanceof Error ? e.message : 'Failed')
+    } finally {
+      setAnalyzing(false)
     }
-    setError('')
+  }
+
+  async function generateProject() {
+    if (!name.trim() || !domain.trim() || !niche.trim()) {
+      setProjectError('Name, domain and niche required'); return
+    }
+    setProjectError('')
     setGenerating(true)
     try {
       const kwList = keywords.split('\n').map(k => k.trim()).filter(Boolean)
@@ -136,147 +255,161 @@ export function BacklinksClient() {
       })
       const d = await r.json()
       if (!r.ok) throw new Error(d.error || 'Failed')
-      setShowForm(false)
+      setShowProjectForm(false)
       setName(''); setDomain(''); setNiche(''); setKeywords(''); setBrief('')
-      load()
+      loadProjects()
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Generation failed')
+      setProjectError(e instanceof Error ? e.message : 'Generation failed')
     } finally {
       setGenerating(false)
     }
   }
 
-  function removeProject(id: string) {
-    setProjects(prev => prev.filter(p => p.id !== id))
-  }
-
   return (
-    <div className="flex-1 overflow-y-auto p-6 max-w-4xl mx-auto w-full">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-black text-slate-800 flex items-center gap-2">
-            🔗 Backlink Prospector
-            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200">PRO</span>
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            AI-generated site-specific link building opportunities with outreach tracking
-          </p>
-        </div>
-        <button
-          onClick={() => { setShowForm(!showForm); setError('') }}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors"
-        >
-          {showForm ? '✕ Cancel' : '+ New Project'}
+    <div className="flex-1 overflow-y-auto p-6 max-w-5xl mx-auto w-full">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-black text-slate-800 flex items-center gap-2">
+          🔗 Backlinks
+          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200">PRO</span>
+        </h1>
+        <p className="text-sm text-slate-500 mt-1">Real backlink data powered by DataForSEO · AI outreach planner with status tracking</p>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-1 mb-6 bg-slate-100 rounded-xl p-1 w-fit">
+        <button onClick={() => setTab('data')}
+          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${tab === 'data' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+          📊 Real Backlink Data
+        </button>
+        <button onClick={() => setTab('outreach')}
+          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${tab === 'outreach' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+          🤖 AI Outreach Planner
         </button>
       </div>
 
-      {showForm && (
-        <div className="bg-white rounded-xl border border-slate-200 p-5 mb-6 shadow-sm">
-          <h2 className="font-bold text-slate-800 mb-4">New Link Building Project</h2>
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="text-xs font-medium text-slate-600 mb-1 block">Project Name *</label>
+      {/* ── TAB: Real Data ── */}
+      {tab === 'data' && (
+        <>
+          {/* Analyze form */}
+          <div className="bg-white rounded-xl border border-slate-200 p-4 mb-6 shadow-sm">
+            <div className="text-sm font-semibold text-slate-700 mb-2">Analyze any domain</div>
+            <div className="flex gap-2">
               <input
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder="e.g. Q3 Link Building Campaign"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-slate-600 mb-1 block">Domain *</label>
-              <input
-                value={domain}
-                onChange={e => setDomain(e.target.value)}
+                value={domainInput}
+                onChange={e => setDomainInput(e.target.value)}
                 placeholder="example.com"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                onKeyDown={e => e.key === 'Enter' && runAnalysis()}
               />
+              <button onClick={runAnalysis} disabled={analyzing}
+                className="px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 disabled:opacity-60 transition-colors min-w-[130px]">
+                {analyzing ? '⏳ Fetching...' : '🔍 Analyze'}
+              </button>
             </div>
+            {analyzeError && <p className="text-xs text-red-500 mt-2">{analyzeError}</p>}
+            {analyzing && <p className="text-xs text-slate-400 mt-2">Fetching live data from DataForSEO (~10 sec)...</p>}
           </div>
 
-          <div className="mb-4">
-            <label className="text-xs font-medium text-slate-600 mb-1 block">Niche / Industry *</label>
-            <div className="flex gap-2 flex-wrap mb-2">
-              {NICHE_EXAMPLES.map(n => (
-                <button
-                  key={n}
-                  onClick={() => setNiche(n)}
-                  className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${niche === n ? 'bg-blue-600 text-white border-blue-600' : 'border-slate-300 text-slate-600 hover:border-blue-400'}`}
-                >
-                  {n}
-                </button>
+          {loadingAnalyses ? (
+            <div className="text-center py-16 text-slate-400">Loading...</div>
+          ) : analyses.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="text-5xl mb-3">📊</div>
+              <div className="text-lg font-bold text-slate-700">No analyses yet</div>
+              <div className="text-sm text-slate-400 mt-1">Enter a domain above to fetch real backlink data</div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {analyses.map(a => (
+                <AnalysisCard key={a.id} a={a} onDelete={id => setAnalyses(prev => prev.filter(x => x.id !== id))} />
               ))}
             </div>
-            <input
-              value={niche}
-              onChange={e => setNiche(e.target.value)}
-              placeholder="Or type your niche..."
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="text-xs font-medium text-slate-600 mb-1 block">Target Keywords (one per line)</label>
-              <textarea
-                value={keywords}
-                onChange={e => setKeywords(e.target.value)}
-                placeholder={"seo tools\nbacklink checker\nrank tracker"}
-                rows={3}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-slate-600 mb-1 block">Content Brief (optional)</label>
-              <textarea
-                value={brief}
-                onChange={e => setBrief(e.target.value)}
-                placeholder="What your site/content is about..."
-                rows={3}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
-              />
-            </div>
-          </div>
-
-          {error && <p className="text-xs text-red-500 mb-3">{error}</p>}
-
-          <div className="flex gap-3 items-center">
-            <button
-              onClick={generate}
-              disabled={generating}
-              className="px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 disabled:opacity-60 transition-colors"
-            >
-              {generating ? '⏳ Generating...' : '🔗 Generate 12 Opportunities'}
-            </button>
-            {generating && (
-              <span className="text-xs text-slate-400">Claude is researching real sites (~20 sec)</span>
-            )}
-          </div>
-        </div>
+          )}
+        </>
       )}
 
-      {loading ? (
-        <div className="text-center py-16 text-slate-400">Loading projects...</div>
-      ) : projects.length === 0 ? (
-        <div className="text-center py-16">
-          <div className="text-5xl mb-3">🔗</div>
-          <div className="text-lg font-bold text-slate-700">No projects yet</div>
-          <div className="text-sm text-slate-400 mt-1">
-            Create a project to get AI-generated backlink opportunities for your domain
+      {/* ── TAB: AI Outreach ── */}
+      {tab === 'outreach' && (
+        <>
+          <div className="flex justify-end mb-4">
+            <button onClick={() => { setShowProjectForm(!showProjectForm); setProjectError('') }}
+              className="px-4 py-2 bg-slate-700 text-white rounded-lg text-sm font-bold hover:bg-slate-800 transition-colors">
+              {showProjectForm ? '✕ Cancel' : '+ New Project'}
+            </button>
           </div>
-          <button
-            onClick={() => setShowForm(true)}
-            className="mt-4 px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors"
-          >
-            + Create First Project
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {projects.map(p => (
-            <ProjectCard key={p.id} p={p} onDelete={removeProject} />
-          ))}
-        </div>
+
+          {showProjectForm && (
+            <div className="bg-white rounded-xl border border-slate-200 p-5 mb-5 shadow-sm">
+              <h2 className="font-bold text-slate-800 mb-4">New Link Building Project</h2>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="text-xs font-medium text-slate-600 mb-1 block">Project Name *</label>
+                  <input value={name} onChange={e => setName(e.target.value)} placeholder="Q3 Link Building"
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-600 mb-1 block">Domain *</label>
+                  <input value={domain} onChange={e => setDomain(e.target.value)} placeholder="example.com"
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                </div>
+              </div>
+              <div className="mb-4">
+                <label className="text-xs font-medium text-slate-600 mb-1 block">Niche *</label>
+                <div className="flex gap-2 flex-wrap mb-2">
+                  {NICHE_EXAMPLES.map(n => (
+                    <button key={n} onClick={() => setNiche(n)}
+                      className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${niche === n ? 'bg-blue-600 text-white border-blue-600' : 'border-slate-300 text-slate-600 hover:border-blue-400'}`}>
+                      {n}
+                    </button>
+                  ))}
+                </div>
+                <input value={niche} onChange={e => setNiche(e.target.value)} placeholder="Or type your niche..."
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+              </div>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="text-xs font-medium text-slate-600 mb-1 block">Target Keywords (one per line)</label>
+                  <textarea value={keywords} onChange={e => setKeywords(e.target.value)} rows={3}
+                    placeholder={"seo tools\nrank tracker"} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-600 mb-1 block">Content Brief</label>
+                  <textarea value={brief} onChange={e => setBrief(e.target.value)} rows={3}
+                    placeholder="What your site is about..." className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none" />
+                </div>
+              </div>
+              {projectError && <p className="text-xs text-red-500 mb-3">{projectError}</p>}
+              <div className="flex gap-3 items-center">
+                <button onClick={generateProject} disabled={generating}
+                  className="px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 disabled:opacity-60 transition-colors">
+                  {generating ? '⏳ Generating...' : '🤖 Generate 12 Opportunities'}
+                </button>
+                {generating && <span className="text-xs text-slate-400">Claude is researching real sites (~20 sec)</span>}
+              </div>
+            </div>
+          )}
+
+          {loadingProjects ? (
+            <div className="text-center py-16 text-slate-400">Loading projects...</div>
+          ) : projects.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="text-5xl mb-3">🤖</div>
+              <div className="text-lg font-bold text-slate-700">No outreach projects yet</div>
+              <div className="text-sm text-slate-400 mt-1">Create a project to get AI-generated pitch angles and track outreach status</div>
+              <button onClick={() => setShowProjectForm(true)}
+                className="mt-4 px-5 py-2 bg-slate-700 text-white rounded-lg text-sm font-bold hover:bg-slate-800 transition-colors">
+                + Create First Project
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {projects.map(p => (
+                <ProjectCard key={p.id} p={p} onDelete={id => setProjects(prev => prev.filter(x => x.id !== id))} />
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   )
