@@ -132,8 +132,8 @@ export default function BacklinkAnalysisPage({ params }: { params: Promise<{ id:
                 <div className={`text-5xl font-black ${analysis.oprScore >= 6 ? 'text-green-600' : analysis.oprScore >= 3 ? 'text-amber-600' : 'text-slate-500'}`}>
                   {analysis.oprScore > 0 ? analysis.oprScore.toFixed(2) : '—'}
                 </div>
-                <div className="text-sm font-semibold text-slate-600 mt-1">Open PageRank Score</div>
-                <div className="text-[10px] text-slate-400">Scale of 0–10 · by openpagerank.com</div>
+                <div className="text-sm font-semibold text-slate-600 mt-1">Domain Authority Score</div>
+                <div className="text-[10px] text-slate-400">Scale of 0–10</div>
                 <div className="mt-3 h-2 rounded-full bg-slate-100 overflow-hidden">
                   <div
                     className={`h-full rounded-full ${analysis.oprScore >= 6 ? 'bg-green-500' : analysis.oprScore >= 3 ? 'bg-amber-500' : 'bg-slate-400'}`}
@@ -146,15 +146,15 @@ export default function BacklinkAnalysisPage({ params }: { params: Promise<{ id:
                   {analysis.domainRank > 0 ? `#${fmt(analysis.domainRank)}` : '—'}
                 </div>
                 <div className="text-sm font-semibold text-slate-600 mt-1">Global Rank</div>
-                <div className="text-[10px] text-slate-400">by Open PageRank index</div>
+                <div className="text-[10px] text-slate-400">global authority index</div>
               </div>
             </div>
 
             {/* Score interpretation */}
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-              <div className="text-sm font-semibold text-blue-800 mb-2">What is Open PageRank?</div>
+              <div className="text-sm font-semibold text-blue-800 mb-2">About Domain Authority Score</div>
               <p className="text-xs text-blue-700">
-                Open PageRank is a free domain authority metric (0–10) based on Google&apos;s original PageRank algorithm, calculated from Common Crawl data.
+                Domain Authority Score (0–10) measures a domain&apos;s overall link authority based on the quality and quantity of inbound links.
                 Higher scores indicate more authoritative domains with stronger link profiles.
               </p>
               <div className="grid grid-cols-3 gap-2 mt-3 text-center text-[10px]">
@@ -179,7 +179,7 @@ export default function BacklinkAnalysisPage({ params }: { params: Promise<{ id:
             <div className="text-lg font-bold text-slate-700 mb-1">Full Backlink Data Coming Soon</div>
             <p className="text-sm text-slate-500 max-w-md mx-auto">
               Detailed backlink lists and referring domain data require a DataForSEO subscription.
-              Currently showing domain authority scores via Open PageRank (free).
+              Currently showing domain authority scores. Full backlink data requires DataForSEO.
             </p>
           </div>
         )}

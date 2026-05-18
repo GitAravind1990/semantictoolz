@@ -80,7 +80,7 @@ function AnalysisCard({ a, onDelete }: { a: DomainAnalysis; onDelete: (id: strin
           <div className="text-xs text-slate-400 mt-0.5">{new Date(a.createdAt).toLocaleDateString()}</div>
         </div>
         <div className="text-right">
-          <div className="text-xs text-slate-400">OPR Score</div>
+          <div className="text-xs text-slate-400">Authority Score</div>
           <div className={`text-2xl font-black ${oprColor(a.oprScore)}`}>
             {a.oprScore > 0 ? a.oprScore.toFixed(1) : '—'}<span className="text-sm font-normal text-slate-400">/10</span>
           </div>
@@ -93,7 +93,7 @@ function AnalysisCard({ a, onDelete }: { a: DomainAnalysis; onDelete: (id: strin
           <div className="text-lg font-bold text-blue-700">
             {a.oprScore > 0 ? a.oprScore.toFixed(2) : '—'}
           </div>
-          <div className="text-[10px] text-slate-500">Open PageRank</div>
+          <div className="text-[10px] text-slate-500">Domain Authority</div>
         </div>
         <div className="bg-slate-50 rounded-lg p-3 text-center">
           <div className="text-lg font-bold text-slate-700">
@@ -257,7 +257,7 @@ export function BacklinksClient() {
           🔗 Backlinks
           <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200">PRO</span>
         </h1>
-        <p className="text-sm text-slate-500 mt-1">Domain authority powered by Open PageRank · AI outreach planner with status tracking</p>
+        <p className="text-sm text-slate-500 mt-1">Domain authority checker · AI outreach planner with status tracking</p>
       </div>
 
       {/* Tabs */}
@@ -277,7 +277,7 @@ export function BacklinksClient() {
         <>
           {/* Analyze form */}
           <div className="bg-white rounded-xl border border-slate-200 p-4 mb-6 shadow-sm">
-            <div className="text-sm font-semibold text-slate-700 mb-2">Check domain authority (Open PageRank)</div>
+            <div className="text-sm font-semibold text-slate-700 mb-2">Check domain authority</div>
             <div className="flex gap-2">
               <input
                 value={domainInput}
@@ -292,7 +292,7 @@ export function BacklinksClient() {
               </button>
             </div>
             {analyzeError && <p className="text-xs text-red-500 mt-2">{analyzeError}</p>}
-            {analyzing && <p className="text-xs text-slate-400 mt-2">Fetching domain authority from Open PageRank...</p>}
+            {analyzing && <p className="text-xs text-slate-400 mt-2">Fetching domain authority...</p>}
           </div>
 
           {loadingAnalyses ? (
