@@ -176,11 +176,7 @@ export default function BacklinkAnalysisPage({ params }: { params: Promise<{ id:
         {(tab === 'Backlinks' || tab === 'Referring Domains') && (
           <div className="bg-white rounded-xl border border-slate-200 p-10 text-center">
             <div className="text-4xl mb-3">🔗</div>
-            <div className="text-lg font-bold text-slate-700 mb-1">Full Backlink Data Coming Soon</div>
-            <p className="text-sm text-slate-500 max-w-md mx-auto">
-              Detailed backlink lists and referring domain data require a DataForSEO subscription.
-              Currently showing domain authority scores. Full backlink data requires DataForSEO.
-            </p>
+            <div className="text-lg font-bold text-slate-700 mb-1">Coming Soon</div>
           </div>
         )}
       </div>
