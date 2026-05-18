@@ -41,6 +41,7 @@ type Analysis = {
   referringIPs: number
   spamScore: number
   domainRank: number
+  oprScore: number
   newBacklinks14d: number
   lostBacklinks14d: number
   newReferringDomains14d: number
@@ -78,8 +79,6 @@ export default function BacklinkAnalysisPage({ params }: { params: Promise<{ id:
   const [analysis, setAnalysis] = useState<Analysis | null>(null)
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<Tab>('Overview')
-  const [filterDofollow, setFilterDofollow] = useState<'all' | 'dofollow' | 'nofollow'>('all')
-  const [anchor, setAnchor] = useState('')
 
   useEffect(() => {
     fetch(`/api/tools/backlinks/domain-analysis/${id}`)
@@ -98,15 +97,6 @@ export default function BacklinkAnalysisPage({ params }: { params: Promise<{ id:
     </div>
   )
 
-  const dofollowPct = analysis.backlinksTotal > 0
-    ? Math.round((analysis.dofollowLinks / analysis.backlinksTotal) * 100) : 0
-
-  const filteredBacklinks = analysis.topBacklinks.filter(b => {
-    if (filterDofollow === 'dofollow' && !b.dofollow) return false
-    if (filterDofollow === 'nofollow' && b.dofollow) return false
-    if (anchor && !b.anchor?.toLowerCase().includes(anchor.toLowerCase())) return false
-    return true
-  })
 
   return (
     <div className="flex-1 overflow-y-auto">
@@ -136,206 +126,61 @@ export default function BacklinkAnalysisPage({ params }: { params: Promise<{ id:
         {/* ── OVERVIEW TAB ── */}
         {tab === 'Overview' && (
           <>
-            {/* Hero metrics */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {[
-                { label: 'Total Backlinks', value: fmt(analysis.backlinksTotal), sub: `${fmt(analysis.dofollowLinks)} dofollow`, color: 'text-blue-700' },
-                { label: 'Referring Domains', value: fmt(analysis.referringDomains), sub: `${fmt(analysis.referringIPs)} unique IPs`, color: 'text-slate-700' },
-                { label: 'Domain Rank', value: analysis.domainRank > 0 ? `#${fmt(analysis.domainRank)}` : '—', sub: 'by DataForSEO', color: 'text-purple-700' },
-                { label: 'Spam Score', value: `${analysis.spamScore}/100`, sub: analysis.spamScore <= 20 ? 'Clean' : analysis.spamScore <= 50 ? 'Moderate' : 'High risk', color: analysis.spamScore <= 20 ? 'text-green-600' : analysis.spamScore <= 50 ? 'text-amber-600' : 'text-red-600' },
-              ].map(m => (
-                <div key={m.label} className="bg-white rounded-xl border border-slate-200 p-4 text-center">
-                  <div className={`text-3xl font-black ${m.color}`}>{m.value}</div>
-                  <div className="text-xs font-semibold text-slate-600 mt-1">{m.label}</div>
-                  <div className="text-[10px] text-slate-400">{m.sub}</div>
+            {/* OPR Score hero */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-white rounded-xl border border-slate-200 p-6 text-center">
+                <div className={`text-5xl font-black ${analysis.oprScore >= 6 ? 'text-green-600' : analysis.oprScore >= 3 ? 'text-amber-600' : 'text-slate-500'}`}>
+                  {analysis.oprScore > 0 ? analysis.oprScore.toFixed(2) : '—'}
                 </div>
-              ))}
-            </div>
-
-            {/* Dofollow breakdown */}
-            <div className="bg-white rounded-xl border border-slate-200 p-4">
-              <div className="flex justify-between text-sm font-semibold text-slate-700 mb-2">
-                <span>Link Type Distribution</span>
-              </div>
-              <div className="h-4 rounded-full bg-slate-100 overflow-hidden flex mb-2">
-                <div className="h-full bg-green-500 flex items-center justify-center text-[9px] text-white font-bold" style={{ width: `${dofollowPct}%` }}>
-                  {dofollowPct > 10 ? `${dofollowPct}%` : ''}
-                </div>
-                <div className="h-full bg-slate-300 flex items-center justify-center text-[9px] text-white font-bold" style={{ width: `${100 - dofollowPct}%` }}>
-                  {(100 - dofollowPct) > 10 ? `${100 - dofollowPct}%` : ''}
+                <div className="text-sm font-semibold text-slate-600 mt-1">Open PageRank Score</div>
+                <div className="text-[10px] text-slate-400">Scale of 0–10 · by openpagerank.com</div>
+                <div className="mt-3 h-2 rounded-full bg-slate-100 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full ${analysis.oprScore >= 6 ? 'bg-green-500' : analysis.oprScore >= 3 ? 'bg-amber-500' : 'bg-slate-400'}`}
+                    style={{ width: `${Math.min((analysis.oprScore / 10) * 100, 100)}%` }}
+                  />
                 </div>
               </div>
-              <div className="flex gap-4 text-xs text-slate-500">
-                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-green-500 inline-block" />Dofollow {fmt(analysis.dofollowLinks)}</span>
-                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-slate-300 inline-block" />Nofollow {fmt(analysis.nofollowLinks)}</span>
+              <div className="bg-white rounded-xl border border-slate-200 p-6 text-center">
+                <div className="text-5xl font-black text-purple-700">
+                  {analysis.domainRank > 0 ? `#${fmt(analysis.domainRank)}` : '—'}
+                </div>
+                <div className="text-sm font-semibold text-slate-600 mt-1">Global Rank</div>
+                <div className="text-[10px] text-slate-400">by Open PageRank index</div>
               </div>
             </div>
 
-            {/* 14-day delta */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {[
-                { label: 'New Backlinks (14d)', value: `+${fmt(analysis.newBacklinks14d)}`, color: 'text-green-600', bg: 'bg-green-50 border-green-200' },
-                { label: 'Lost Backlinks (14d)', value: `-${fmt(analysis.lostBacklinks14d)}`, color: 'text-red-500', bg: 'bg-red-50 border-red-200' },
-                { label: 'New Ref. Domains (14d)', value: `+${fmt(analysis.newReferringDomains14d)}`, color: 'text-green-600', bg: 'bg-green-50 border-green-200' },
-                { label: 'Lost Ref. Domains (14d)', value: `-${fmt(analysis.lostReferringDomains14d)}`, color: 'text-red-500', bg: 'bg-red-50 border-red-200' },
-              ].map(m => (
-                <div key={m.label} className={`rounded-xl border p-4 text-center ${m.bg}`}>
-                  <div className={`text-2xl font-black ${m.color}`}>{m.value}</div>
-                  <div className="text-[10px] text-slate-500 mt-1">{m.label}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Additional stats */}
-            <div className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-3 gap-4 text-center">
-              <div>
-                <div className="text-xl font-bold text-slate-700">{fmt(analysis.referringIPs)}</div>
-                <div className="text-xs text-slate-400">Unique IPs</div>
-              </div>
-              <div>
-                <div className="text-xl font-bold text-amber-600">{fmt(analysis.brokenBacklinks)}</div>
-                <div className="text-xs text-slate-400">Broken Backlinks</div>
-              </div>
-              <div>
-                <div className={`text-xl font-bold`}>{dofollowPct}%</div>
-                <div className="text-xs text-slate-400">Dofollow Ratio</div>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* ── BACKLINKS TAB ── */}
-        {tab === 'Backlinks' && (
-          <>
-            {/* Filters */}
-            <div className="flex gap-3 items-center flex-wrap">
-              <div className="flex gap-1 bg-slate-100 rounded-lg p-1">
-                {(['all', 'dofollow', 'nofollow'] as const).map(f => (
-                  <button key={f} onClick={() => setFilterDofollow(f)}
-                    className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${filterDofollow === f ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500'}`}>
-                    {f.charAt(0).toUpperCase() + f.slice(1)}
-                  </button>
+            {/* Score interpretation */}
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+              <div className="text-sm font-semibold text-blue-800 mb-2">What is Open PageRank?</div>
+              <p className="text-xs text-blue-700">
+                Open PageRank is a free domain authority metric (0–10) based on Google&apos;s original PageRank algorithm, calculated from Common Crawl data.
+                Higher scores indicate more authoritative domains with stronger link profiles.
+              </p>
+              <div className="grid grid-cols-3 gap-2 mt-3 text-center text-[10px]">
+                {[
+                  { range: '0–2', label: 'Low', color: 'bg-slate-100 text-slate-600' },
+                  { range: '3–5', label: 'Moderate', color: 'bg-amber-100 text-amber-700' },
+                  { range: '6–10', label: 'High', color: 'bg-green-100 text-green-700' },
+                ].map(b => (
+                  <div key={b.range} className={`rounded-lg px-2 py-1.5 font-semibold ${b.color}`}>
+                    {b.range} — {b.label}
+                  </div>
                 ))}
               </div>
-              <input value={anchor} onChange={e => setAnchor(e.target.value)}
-                placeholder="Filter by anchor text..."
-                className="border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
-              <span className="text-xs text-slate-400 ml-auto">{filteredBacklinks.length} of {analysis.topBacklinks.length} shown (top 100)</span>
-            </div>
-
-            {/* Backlinks table */}
-            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead className="bg-slate-50 border-b border-slate-200">
-                    <tr>
-                      <th className="px-4 py-2.5 text-left font-semibold text-slate-600">Source</th>
-                      <th className="px-4 py-2.5 text-left font-semibold text-slate-600">Anchor</th>
-                      <th className="px-4 py-2.5 text-center font-semibold text-slate-600">DR</th>
-                      <th className="px-4 py-2.5 text-center font-semibold text-slate-600">Type</th>
-                      <th className="px-4 py-2.5 text-left font-semibold text-slate-600">First Seen</th>
-                      <th className="px-4 py-2.5 text-center font-semibold text-slate-600">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredBacklinks.length === 0 ? (
-                      <tr><td colSpan={6} className="text-center py-8 text-slate-400">No backlinks match filters</td></tr>
-                    ) : filteredBacklinks.map((bl, i) => (
-                      <tr key={i} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                        <td className="px-4 py-2.5 max-w-[200px]">
-                          <div className="font-medium text-slate-700 truncate">{bl.domain_from}</div>
-                          <a href={bl.url_from} target="_blank" rel="noopener noreferrer"
-                            className="text-blue-500 hover:underline truncate block max-w-[180px]">
-                            {bl.url_from.replace(/^https?:\/\//, '').slice(0, 50)}
-                          </a>
-                        </td>
-                        <td className="px-4 py-2.5 max-w-[160px]">
-                          <span className="text-slate-700 italic truncate block">
-                            {bl.anchor || <span className="text-slate-300">—</span>}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2.5 text-center">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${rankBadge(bl.domain_from_rank)}`}>
-                            {bl.domain_from_rank > 0 ? bl.domain_from_rank.toLocaleString() : '—'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2.5 text-center">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${bl.dofollow ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
-                            {bl.dofollow ? 'dofollow' : 'nofollow'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2.5 text-slate-400">
-                          {bl.first_seen ? new Date(bl.first_seen).toLocaleDateString() : '—'}
-                        </td>
-                        <td className="px-4 py-2.5 text-center">
-                          {bl.is_new && <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700">New</span>}
-                          {bl.is_lost && <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-500">Lost</span>}
-                          {!bl.is_new && !bl.is_lost && <span className="text-slate-300">—</span>}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
             </div>
           </>
         )}
 
-        {/* ── REFERRING DOMAINS TAB ── */}
-        {tab === 'Referring Domains' && (
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 text-xs text-slate-400">
-              Top {analysis.topReferringDomains.length} referring domains by rank (of {fmt(analysis.referringDomains)} total)
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead className="border-b border-slate-100">
-                  <tr>
-                    <th className="px-4 py-2.5 text-left font-semibold text-slate-600">Domain</th>
-                    <th className="px-4 py-2.5 text-center font-semibold text-slate-600">Rank</th>
-                    <th className="px-4 py-2.5 text-center font-semibold text-slate-600">Links</th>
-                    <th className="px-4 py-2.5 text-center font-semibold text-slate-600">Dofollow</th>
-                    <th className="px-4 py-2.5 text-center font-semibold text-slate-600">Spam</th>
-                    <th className="px-4 py-2.5 text-left font-semibold text-slate-600">First Seen</th>
-                    <th className="px-4 py-2.5 text-center font-semibold text-slate-600">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {analysis.topReferringDomains.length === 0 ? (
-                    <tr><td colSpan={7} className="text-center py-8 text-slate-400">No referring domains data</td></tr>
-                  ) : analysis.topReferringDomains.map((rd, i) => (
-                    <tr key={i} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                      <td className="px-4 py-2.5">
-                        <a href={`https://${rd.domain}`} target="_blank" rel="noopener noreferrer"
-                          className="font-medium text-blue-600 hover:underline">{rd.domain}</a>
-                      </td>
-                      <td className="px-4 py-2.5 text-center">
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${rankBadge(rd.rank)}`}>
-                          {rd.rank > 0 ? rd.rank.toLocaleString() : '—'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2.5 text-center font-medium text-slate-700">{rd.backlinks}</td>
-                      <td className="px-4 py-2.5 text-center">
-                        <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-[10px] font-bold">{rd.dofollow}</span>
-                      </td>
-                      <td className="px-4 py-2.5 text-center">
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${spamBadge(rd.spam_score ?? 0)}`}>
-                          {rd.spam_score ?? 0}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2.5 text-slate-400">
-                        {rd.first_seen ? new Date(rd.first_seen).toLocaleDateString() : '—'}
-                      </td>
-                      <td className="px-4 py-2.5 text-center">
-                        {rd.is_new && <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700">New</span>}
-                        {rd.is_lost && <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-500">Lost</span>}
-                        {!rd.is_new && !rd.is_lost && <span className="text-slate-300">—</span>}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+        {/* ── BACKLINKS / REFERRING DOMAINS TABS ── */}
+        {(tab === 'Backlinks' || tab === 'Referring Domains') && (
+          <div className="bg-white rounded-xl border border-slate-200 p-10 text-center">
+            <div className="text-4xl mb-3">🔗</div>
+            <div className="text-lg font-bold text-slate-700 mb-1">Full Backlink Data Coming Soon</div>
+            <p className="text-sm text-slate-500 max-w-md mx-auto">
+              Detailed backlink lists and referring domain data require a DataForSEO subscription.
+              Currently showing domain authority scores via Open PageRank (free).
+            </p>
           </div>
         )}
       </div>
