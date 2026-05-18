@@ -108,9 +108,8 @@ export async function POST(req: NextRequest) {
       console.log(`[Dodo Webhook] Unhandled event: ${eventType}`)
     }
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err)
-    console.error('[Dodo Webhook] Processing error:', msg)
-    return NextResponse.json({ error: 'Processing failed', detail: msg }, { status: 500 })
+    console.error('[Dodo Webhook] Processing error:', err)
+    return NextResponse.json({ error: 'Processing failed' }, { status: 500 })
   }
 
   return NextResponse.json({ received: true })
