@@ -126,10 +126,10 @@ model ReportTemplate {
 model Subscription {
   id                   String             @id @default(cuid())
   userId               String             @unique
-  paddleSubscriptionId String             @unique
-  paddleCustomerId     String
-  paddlePriceId        String
-  paddleTransactionId  String?
+  dodoSubscriptionId   String             @unique
+  dodoCustomerId       String
+  dodoProductId        String
+  dodoPaymentId        String?
   status               SubscriptionStatus @default(ACTIVE)
   plan                 Plan
   currentPeriodEnd     DateTime?
@@ -139,7 +139,7 @@ model Subscription {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([paddleSubscriptionId])
+  @@index([dodoSubscriptionId])
   @@index([userId])
 }
 

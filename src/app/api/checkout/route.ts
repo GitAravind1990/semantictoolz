@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { auth, currentUser } from '@clerk/nextjs/server'
-import { paddle } from '@/lib/paddle'
+import { dodo } from '@/lib/dodopayments'
 import { prisma } from '@/lib/prisma'
 import { apiError, apiSuccess } from '@/lib/api'
 
@@ -11,25 +11,27 @@ export async function POST(req: NextRequest) {
     const { userId: clerkId } = await auth()
     if (!clerkId) return apiError({ message: 'Not authenticated', status: 401, name: 'AuthError' })
 
-    const { priceId } = await req.json()
-    if (!priceId) return apiError(new Error('priceId is required'))
+    const { productId } = await req.json()
+    if (!productId) return apiError(new Error('productId is required'))
 
     const clerkUser = await currentUser()
     const email = clerkUser?.emailAddresses[0]?.emailAddress ?? ''
+    const name = clerkUser?.fullName ?? email
 
     let user = await prisma.user.findUnique({ where: { clerkId } })
     if (!user) {
       user = await prisma.user.create({ data: { clerkId, email } })
     }
 
-    const transaction = await paddle.transactions.create({
-      items: [{ priceId, quantity: 1 }],
-      customer: { email },
-      customData: { userId: user.id, clerkId },
+    const session = await dodo.checkoutSessions.create({
+      product_cart: [{ product_id: productId, quantity: 1 }],
+      customer: { email, name },
+      metadata: { userId: user.id, clerkId },
+      return_url: `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://semantictoolz.com'}/dashboard/settings`,
     } as any)
 
-    const checkoutUrl = (transaction as any).checkout?.url
-      ?? `https://checkout.paddle.com/checkout/custom/${transaction.id}`
+    const checkoutUrl = (session as any).checkout_url ?? (session as any).url
+    if (!checkoutUrl) throw new Error('Checkout URL not returned')
 
     return apiSuccess({ url: checkoutUrl })
   } catch (e) {

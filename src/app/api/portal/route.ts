@@ -15,32 +15,12 @@ export async function POST(req: NextRequest) {
       include: { subscription: true },
     })
 
-    if (!user?.subscription?.paddleCustomerId) {
+    if (!user?.subscription?.dodoCustomerId) {
       return apiError(new Error('No active subscription found'))
     }
 
-    const { paddleCustomerId, paddleSubscriptionId } = user.subscription
-
-    const res = await fetch(
-      `https://api.paddle.com/customers/${paddleCustomerId}/portal-sessions`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${process.env.PADDLE_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ subscription_ids: [paddleSubscriptionId] }),
-      }
-    )
-
-    if (!res.ok) {
-      const err = await res.json()
-      throw new Error(err?.error?.detail ?? 'Could not create portal session')
-    }
-
-    const data = await res.json()
-    const portalUrl = data?.data?.urls?.general?.overview
-    if (!portalUrl) throw new Error('Portal URL not available')
+    // Dodo Payments self-service portal
+    const portalUrl = `https://customer.dodopayments.com/subscriptions?customer_id=${user.subscription.dodoCustomerId}`
 
     return apiSuccess({ url: portalUrl })
   } catch (e) {

@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 
-const PRO_PRICE_ID = process.env.NEXT_PUBLIC_PADDLE_PRO_PRICE_ID!
-const AGENCY_PRICE_ID = process.env.NEXT_PUBLIC_PADDLE_AGENCY_PRICE_ID!
+const PRO_PRODUCT_ID = process.env.NEXT_PUBLIC_DODO_PRO_PRODUCT_ID!
+const AGENCY_PRODUCT_ID = process.env.NEXT_PUBLIC_DODO_AGENCY_PRODUCT_ID!
 
 const PLANS = [
   {
@@ -12,7 +12,7 @@ const PLANS = [
     price: '$0',
     period: 'forever',
     color: 'gray',
-    priceId: null,
+    productId: null,
     features: [
       '3 analyses / month',
       'Content Analyzer (8-dimension score)',
@@ -28,7 +28,7 @@ const PLANS = [
     period: '/month',
     color: 'blue',
     featured: true,
-    priceId: PRO_PRICE_ID,
+    productId: PRO_PRODUCT_ID,
     features: [
       '50 analyses / month',
       'Everything in Free',
@@ -46,7 +46,7 @@ const PLANS = [
     price: '$49',
     period: '/month',
     color: 'amber',
-    priceId: AGENCY_PRICE_ID,
+    productId: AGENCY_PRODUCT_ID,
     features: [
       '200 analyses / month',
       'Everything in Pro',
@@ -64,7 +64,7 @@ export default function PricingPage() {
   const [loading, setLoading] = useState<string | null>(null)
 
   async function handleCheckout(plan: typeof PLANS[0]) {
-    if (!plan.priceId) {
+    if (!plan.productId) {
       if (plan.href) window.location.href = plan.href
       return
     }
@@ -73,7 +73,7 @@ export default function PricingPage() {
       const r = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ priceId: plan.priceId }),
+        body: JSON.stringify({ productId: plan.productId }),
       })
       const d = await r.json()
       if (!r.ok) throw new Error(d.error ?? 'Checkout failed')
@@ -136,7 +136,7 @@ export default function PricingPage() {
 
         <p className="text-center text-xs text-slate-400 mt-10">
           Payments securely processed by{' '}
-          <a href="https://paddle.com" target="_blank" rel="noopener noreferrer" className="underline">Paddle</a>
+          <a href="https://dodopayments.com" target="_blank" rel="noopener noreferrer" className="underline">Dodo Payments</a>
           {' '}· Cancel anytime
         </p>
 
