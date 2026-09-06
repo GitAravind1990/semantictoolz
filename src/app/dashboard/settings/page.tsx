@@ -6,6 +6,8 @@ import { useSearchParams } from 'next/navigation'
 import { UserButton, useUser } from '@clerk/nextjs'
 import { Card, Badge, Button, Spinner, ScoreBar } from '@/components/ui'
 import { TeamSeats } from '@/components/team-seats'
+import { PLAN_LIMITS } from '@/lib/plans'
+import type { Plan } from '@prisma/client'
 
 type GSCStatus = {
   connected: boolean
@@ -52,17 +54,33 @@ type UsageData = {
   } | null
 }
 
-const PLAN_META: Record<string, { label: string; color: 'blue'|'amber'|'gray'; price: string; limit: number; bg: string }> = {
-  FREE:   { label: 'Free',   color: 'gray',  price: '$0/mo',  limit: 3,   bg: 'from-slate-700 to-slate-600' },
-  PRO:    { label: 'Pro',    color: 'blue',  price: '$19/mo', limit: 50,  bg: 'from-blue-700 to-blue-500' },
-  AGENCY: { label: 'Agency', color: 'amber', price: '$49/mo', limit: 200, bg: 'from-amber-600 to-amber-500' },
+/**
+ * Every plan must appear here.
+ *
+ * Typed `Record<Plan, …>` on purpose: this was `Record<string, …>` read through
+ * `PLAN_META[plan] ?? PLAN_META.FREE`, so when Starter and Agency Plus were added and not
+ * listed, both fell through the fallback and a **paying customer saw "Free · $0/mo · 3
+ * analyses"** on their own settings page. Nothing errored — the fallback made it look
+ * deliberate. With this type, omitting a plan is a compile error instead.
+ *
+ * `limit` comes from PLAN_LIMITS rather than a literal, because the number shown here has to
+ * be the one actually enforced; a hardcoded copy is exactly how the two drift apart.
+ */
+const PLAN_META: Record<Plan, { label: string; color: 'blue'|'amber'|'gray'; price: string; limit: number; bg: string }> = {
+  FREE:        { label: 'Free',        color: 'gray',  price: '$0/mo',  limit: PLAN_LIMITS.FREE,        bg: 'from-slate-700 to-slate-600' },
+  STARTER:     { label: 'Starter',     color: 'blue',  price: '$9/mo',  limit: PLAN_LIMITS.STARTER,     bg: 'from-slate-700 to-blue-700' },
+  PRO:         { label: 'Pro',         color: 'blue',  price: '$19/mo', limit: PLAN_LIMITS.PRO,         bg: 'from-blue-700 to-blue-500' },
+  AGENCY:      { label: 'Agency',      color: 'amber', price: '$49/mo', limit: PLAN_LIMITS.AGENCY,      bg: 'from-amber-600 to-amber-500' },
+  AGENCY_PLUS: { label: 'Agency Plus', color: 'amber', price: '$99/mo', limit: PLAN_LIMITS.AGENCY_PLUS, bg: 'from-amber-700 to-amber-500' },
 }
 
+// Starter deliberately unlocks the same two tools as Free — it buys volume, not access — so
+// it appears exactly where FREE does. Agency Plus sees everything Agency does.
 const ALL_TOOLS = [
-  { label: 'Content Analyzer',  plans: ['FREE','PRO','AGENCY'] },
-  { label: 'Issues Audit',      plans: ['FREE','PRO','AGENCY'] },
-  { label: 'Content Optimizer', plans: ['PRO','AGENCY'] },
-  { label: 'More tools coming soon', plans: ['AGENCY'] },
+  { label: 'Content Analyzer',  plans: ['FREE','STARTER','PRO','AGENCY','AGENCY_PLUS'] },
+  { label: 'Issues Audit',      plans: ['FREE','STARTER','PRO','AGENCY','AGENCY_PLUS'] },
+  { label: 'Content Optimizer', plans: ['PRO','AGENCY','AGENCY_PLUS'] },
+  { label: 'More tools coming soon', plans: ['AGENCY','AGENCY_PLUS'] },
 ]
 
 type Tab = 'account' | 'plan' | 'billing' | 'integrations'
@@ -107,7 +125,8 @@ export default function SettingsPage() {
     }
   }, [searchParams])
 
-  const plan = usage?.plan ?? 'FREE'
+  // Typed as Plan so PLAN_META below is indexed exhaustively rather than by loose string.
+  const plan = (usage?.plan ?? 'FREE') as Plan
 
   // `siteUnverifiedUser` grants cannot back Search Analytics reads, so the sync route
   // filters them out server-side. Mirrored here so the picker offers exactly what the
@@ -521,7 +540,7 @@ export default function SettingsPage() {
                     </svg>
                   </div>
                   <p className="text-sm font-black text-slate-800 mb-1">No active subscription</p>
-                  <p className="text-xs text-slate-400 mb-6">You're on the Free plan · 3 analyses per month</p>
+                  <p className="text-xs text-slate-400 mb-6">You&apos;re on the Free plan · {PLAN_LIMITS.FREE} analyses per month</p>
                   <Link href="/pricing"
                     className="inline-block rounded-xl bg-blue-600 px-8 py-3 text-sm font-bold text-white hover:bg-blue-700 transition-colors">
                     Upgrade to Pro ($19/mo) →

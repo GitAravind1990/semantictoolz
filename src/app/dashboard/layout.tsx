@@ -130,7 +130,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return pathname === tool.href
   }
 
-  const planLabel = plan === 'FREE' ? 'Free' : plan === 'PRO' ? 'Pro' : plan === 'AGENCY' ? 'Agency' : ''
+  // Every plan needs a label. This was a ternary chain covering only FREE/PRO/AGENCY, so
+  // Starter and Agency Plus rendered as an empty string — the sidebar read " Plan".
+  const PLAN_LABELS: Record<string, string> = {
+    FREE: 'Free', STARTER: 'Starter', PRO: 'Pro', AGENCY: 'Agency', AGENCY_PLUS: 'Agency Plus',
+  }
+  const planLabel = plan ? PLAN_LABELS[plan] ?? plan : ''
   const barColor  = pct >= 90 ? 'bg-red-500' : pct >= 70 ? 'bg-amber-500' : 'bg-brand-500'
 
   return (
