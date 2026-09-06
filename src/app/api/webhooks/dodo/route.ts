@@ -164,10 +164,19 @@ export async function POST(req: NextRequest) {
           // would restore Agency on the next request anyway, but leaving FREE in the database
           // makes the admin dashboard and every export disagree with what the user actually has.
           const dbUser = await prisma.user.findUnique({ where: { id: userId } })
-          if (!isAlwaysAgency(dbUser?.email)) {
+          // Only a live subscription grants the plan. A declined or still-settling payment is
+          // recorded on the subscription row but must not upgrade the account -- that was the
+          // failed-card leak. Deliberately does NOT downgrade on a non-granting status either:
+          // a mid-period PAST_DUE must not revoke access that Terms and the Refund Policy both
+          // promise until currentPeriodEnd. Lapsing is handled by getOrCreateUser, on dates.
+          if (!isAlwaysAgency(dbUser?.email) && GRANTS_ACCESS.has(status)) {
             await prisma.user.update({ where: { id: userId }, data: { plan } })
           }
-          console.log(`[Dodo Webhook] Upserted subscription ${sub.subscription_id} → ${planKey}`)
+          console.log(
+            GRANTS_ACCESS.has(status)
+              ? `[Dodo Webhook] Upserted subscription ${sub.subscription_id} → ${planKey}`
+              : `[Dodo Webhook] Recorded ${sub.subscription_id} as ${status} (dodo: "${sub.status}") — plan NOT granted`,
+          )
 
           if (dbUser) {
             if (dbUser.clerkId) {
@@ -321,8 +330,25 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ received: true })
 }
 
-function mapStatus(dodoStatus: string): 'ACTIVE' | 'CANCELLED' | 'EXPIRED' | 'PAST_DUE' | 'PAUSED' | 'TRIALING' {
-  const map: Record<string, 'ACTIVE' | 'CANCELLED' | 'EXPIRED' | 'PAST_DUE' | 'PAUSED' | 'TRIALING'> = {
+type SubStatus = 'ACTIVE' | 'CANCELLED' | 'EXPIRED' | 'PAST_DUE' | 'PAUSED' | 'TRIALING'
+
+/**
+ * Dodo's subscription status → ours.
+ *
+ * **`failed` and `pending` are here because they were not, and the default was `ACTIVE`.**
+ * Dodo creates the subscription when checkout starts, before the card settles, and fires a
+ * webhook for it. A declined card therefore arrived as an unmapped status and was written
+ * as ACTIVE, granting the paid plan to someone who had not paid. Observed live on
+ * 2026-09-06: two declines at 10:00 and 10:03 created an ACTIVE STARTER row that only
+ * corrected itself when a third attempt succeeded at 10:12. Had the customer given up after
+ * the declines, they would have kept the plan indefinitely, and nothing would have logged.
+ *
+ * The default is now fail-closed. An unknown status that really means "active" costs a
+ * customer their access and they will tell you within minutes; an unknown status silently
+ * treated as active costs revenue and tells nobody.
+ */
+function mapStatus(dodoStatus: string): SubStatus {
+  const map: Record<string, SubStatus> = {
     active: 'ACTIVE',
     cancelled: 'CANCELLED',
     expired: 'EXPIRED',
@@ -330,9 +356,25 @@ function mapStatus(dodoStatus: string): 'ACTIVE' | 'CANCELLED' | 'EXPIRED' | 'PA
     paused: 'PAUSED',
     on_hold: 'PAST_DUE',
     trialing: 'TRIALING',
+    failed: 'EXPIRED',
+    pending: 'EXPIRED',
   }
-  return map[dodoStatus] ?? 'ACTIVE'
+  const mapped = map[dodoStatus]
+  if (!mapped) {
+    console.error(`[Dodo Webhook] Unknown subscription status "${dodoStatus}" — not granting access`)
+    return 'EXPIRED'
+  }
+  return mapped
 }
+
+/**
+ * The statuses that actually entitle someone to a paid plan.
+ *
+ * The second lock on the bug above, and the one that matters: mapStatus decides what we
+ * *record*, this decides what we *grant*. Even if a future Dodo status slips through
+ * unmapped, the plan is not written unless the subscription is genuinely live.
+ */
+const GRANTS_ACCESS: ReadonlySet<SubStatus> = new Set<SubStatus>(['ACTIVE', 'TRIALING'])
 
 async function resolveUserId(
   userId?: string,
