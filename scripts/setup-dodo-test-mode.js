@@ -151,7 +151,16 @@ async function main() {
   for (const [key, id] of Object.entries(ids)) console.log(`  ${ENV_NAME[key]}=${id}`)
   console.log('\nDODO_MODE=test_mode')
   console.log('DODO_TEST_API_KEY=<the test key>')
+  console.log('DODO_TEST_WEBHOOK_SECRET=<the test webhook secret>')
   console.log('\nProduction keeps its live ids under the same names and no DODO_MODE.')
+  console.log(
+    '\nThe webhook secret is separate per mode and is what actually grants the plan.\n' +
+    'Without it a test payment succeeds in Dodo and the app never upgrades the user —\n' +
+    'the signature check fails closed against the wrong secret. It comes from the Dodo\n' +
+    'dashboard in Test mode, where the endpoint must also point at a URL Dodo can reach:\n' +
+    'localhost will not receive webhooks, so a test purchase needs a deployed preview or\n' +
+    'a tunnel.'
+  )
 }
 
 main().catch(e => { console.error('ERR', e.message); process.exit(1) })

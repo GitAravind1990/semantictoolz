@@ -25,20 +25,48 @@ export function dodoMode(): DodoMode {
   return process.env.DODO_MODE === 'test_mode' ? 'test_mode' : 'live_mode'
 }
 
+/**
+ * The API key for the current mode, and the variable it came from.
+ *
+ * Returned together so callers can name the missing variable in their error rather than
+ * saying "not configured" and leaving whoever reads the log to guess which of the two
+ * environments they failed to set up.
+ */
+export function dodoApiKey(): { key: string | undefined; varName: string } {
+  return dodoMode() === 'test_mode'
+    ? { key: process.env.DODO_TEST_API_KEY, varName: 'DODO_TEST_API_KEY' }
+    : { key: process.env.DODO_API_KEY, varName: 'DODO_API_KEY' }
+}
+
+/**
+ * The webhook signing secret for the current mode.
+ *
+ * **Test and live sign with different secrets**, so this has to follow the mode in step with
+ * the API key. Verifying a test webhook against the live secret fails closed — a 401 and no
+ * plan granted — which is the safe direction but an actively misleading one: the payment
+ * succeeds in Dodo and the app silently never upgrades the user, which reads as a broken
+ * webhook rather than a misconfigured one.
+ */
+export function dodoWebhookSecret(): { secret: string | undefined; varName: string } {
+  return dodoMode() === 'test_mode'
+    ? { secret: process.env.DODO_TEST_WEBHOOK_SECRET, varName: 'DODO_TEST_WEBHOOK_SECRET' }
+    : { secret: process.env.DODO_WEBHOOK_SECRET, varName: 'DODO_WEBHOOK_SECRET' }
+}
+
 function getDodoInstance(): DodoPayments {
   if (!dodoInstance) {
     const mode = dodoMode()
     // Never falls back to the live key in test mode. A silent fallback is how a test run
     // ends up creating real products and charging a real card.
-    const apiKey = mode === 'test_mode' ? process.env.DODO_TEST_API_KEY : process.env.DODO_API_KEY
-    if (!apiKey) {
+    const { key, varName } = dodoApiKey()
+    if (!key) {
       throw new Error(
         mode === 'test_mode'
-          ? 'DODO_TEST_API_KEY is not set, and test mode will not fall back to the live key'
-          : 'DODO_API_KEY environment variable is not set'
+          ? `${varName} is not set, and test mode will not fall back to the live key`
+          : `${varName} environment variable is not set`
       )
     }
-    dodoInstance = new DodoPayments({ bearerToken: apiKey, environment: mode })
+    dodoInstance = new DodoPayments({ bearerToken: key, environment: mode })
   }
   return dodoInstance
 }

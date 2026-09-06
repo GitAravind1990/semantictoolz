@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import DodoPayments from 'dodopayments'
-import { getPlanFromProductId } from '@/lib/dodopayments'
+import { getPlanFromProductId, dodoApiKey, dodoMode, dodoWebhookSecret } from '@/lib/dodopayments'
 import { prisma } from '@/lib/prisma'
 import { Plan } from '@prisma/client'
 import { captureServerEvent } from '@/lib/posthog-server'
@@ -12,20 +12,24 @@ export const runtime = 'nodejs'
 export async function POST(req: NextRequest) {
   const rawBody = await req.text()
 
-  const webhookSecret = process.env['DODO_WEBHOOK_SECRET']
+  // Both credentials follow DODO_MODE. A test-mode deployment verifying against the live
+  // secret would reject every test webhook as an invalid signature — the payment succeeds
+  // in Dodo and the plan is never granted, which looks like a broken webhook rather than a
+  // missing variable. Resolving both through the same mode keeps them from disagreeing.
+  const { secret: webhookSecret, varName: secretVar } = dodoWebhookSecret()
   if (!webhookSecret) {
-    console.error('[Dodo Webhook] DODO_WEBHOOK_SECRET not set')
+    console.error(`[Dodo Webhook] ${secretVar} not set (mode: ${dodoMode()})`)
     return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 })
   }
 
-  const dodoApiKey = process.env.DODO_API_KEY
-  if (!dodoApiKey) {
-    console.error('[Dodo Webhook] DODO_API_KEY not set')
+  const { key: apiKey, varName: keyVar } = dodoApiKey()
+  if (!apiKey) {
+    console.error(`[Dodo Webhook] ${keyVar} not set (mode: ${dodoMode()})`)
     return NextResponse.json({ error: 'API key not configured' }, { status: 500 })
   }
 
   const dodoWebhook = new DodoPayments({
-    bearerToken: dodoApiKey,
+    bearerToken: apiKey,
     webhookKey: webhookSecret,
   })
 
