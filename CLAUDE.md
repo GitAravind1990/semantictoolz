@@ -131,15 +131,21 @@ nothing to read afterwards either. Three things in the same commit:
   **every** exit path: the normal return, early returns, and thrown errors. A
   `finally` that cannot see a throw records a crash as a successful run.
 
-**This is a Hobby plan: one run per day per cron expression, fired anywhere
-inside the scheduled hour.** Anything more frequent — `0 */6 * * *`, `*/30 * * * *`
-— is rejected when you deploy, so it breaks the next deploy of *anything*, not
-just the cron — and a rejected `vercel.json` takes the whole deploy with it, so the
-symptom is unrelated work not shipping. (A six-hourly health check once sat committed
-and unshipped for a day. That was recorded here as "nothing deploys on push"; see the
-correction below — pushing now builds, so today the same mistake surfaces as a failed
-deployment rather than silence.) Want a job several times a day, list it several
-times, once per hour you want:
+**The account moved to Vercel Pro on 2026-09-06, so the one-run-per-day cron limit
+no longer applies.** It was upgraded because Hobby forbids commercial use and this
+project charges customers — that, not the cron limit, was the reason. Frequent
+expressions such as `0 */6 * * *` are now accepted at deploy.
+
+What follows is the Hobby-era constraint, kept because the workaround it produced is
+still live in `vercel.json` and still correct — do not "fix" it without reading this.
+Under Hobby it was **one run per day per cron expression, fired anywhere inside the
+scheduled hour**, and anything more frequent was rejected at deploy, breaking the next
+deploy of *anything* rather than just the cron — a rejected `vercel.json` takes the
+whole deploy with it, so the symptom was unrelated work not shipping. (A six-hourly
+health check once sat committed and unshipped for a day. That was recorded here as
+"nothing deploys on push"; see the correction below — pushing now builds, so the same
+mistake would surface as a failed deployment rather than silence.) The workaround was
+to list a job several times, once per hour you want:
 `vercel.json` allows repeated `path` entries and sends `x-vercel-cron-schedule`
 to tell them apart. Budget for the jitter when setting `staleAfterMs` — two runs
 six hours apart can land 6h59m apart.
