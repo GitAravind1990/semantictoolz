@@ -6,16 +6,39 @@ if (typeof window !== 'undefined') {
 
 let dodoInstance: DodoPayments | null = null
 
+/**
+ * Which Dodo environment this process talks to.
+ *
+ * **Test mode is a real environment and this used to say it was not.** `test.dodopayments.com`
+ * answers 401 to a live key rather than failing to resolve, which means the environment
+ * exists and simply needs its own credential — the two modes hold entirely separate
+ * products, subscriptions and webhook secrets.
+ *
+ * Defaults to live, so nothing changes for an existing deployment that sets neither
+ * variable. Test mode requires `DODO_MODE=test_mode` **and** a test key in
+ * `DODO_TEST_API_KEY`: opting in needs both, because a mode flag alone would otherwise
+ * send a live key to an endpoint that rejects it and read as an outage.
+ */
+export type DodoMode = 'live_mode' | 'test_mode'
+
+export function dodoMode(): DodoMode {
+  return process.env.DODO_MODE === 'test_mode' ? 'test_mode' : 'live_mode'
+}
+
 function getDodoInstance(): DodoPayments {
   if (!dodoInstance) {
-    const apiKey = process.env.DODO_API_KEY
+    const mode = dodoMode()
+    // Never falls back to the live key in test mode. A silent fallback is how a test run
+    // ends up creating real products and charging a real card.
+    const apiKey = mode === 'test_mode' ? process.env.DODO_TEST_API_KEY : process.env.DODO_API_KEY
     if (!apiKey) {
-      throw new Error('DODO_API_KEY environment variable is not set')
+      throw new Error(
+        mode === 'test_mode'
+          ? 'DODO_TEST_API_KEY is not set, and test mode will not fall back to the live key'
+          : 'DODO_API_KEY environment variable is not set'
+      )
     }
-    dodoInstance = new DodoPayments({
-      bearerToken: apiKey,
-      environment: 'live_mode',
-    })
+    dodoInstance = new DodoPayments({ bearerToken: apiKey, environment: mode })
   }
   return dodoInstance
 }
@@ -27,6 +50,15 @@ export const dodo = new Proxy({}, {
   },
 }) as DodoPayments
 
+/**
+ * Product ids for whichever mode this deployment runs in.
+ *
+ * Deliberately **not** duplicated into a second set of TEST_ variables. Test and live hold
+ * different product ids, but Vercel scopes environment variables per environment, so the
+ * Development and Preview scopes carry the test ids under these same names while Production
+ * carries the live ones. One name per product, whose value depends on where it runs — the
+ * alternative is sixteen variables and a permanent question about which set is authoritative.
+ */
 export const DODO_PRODUCT_IDS = {
   /**
    * Starter, $9/mo. Empty until the product is created in Dodo — this integration is
