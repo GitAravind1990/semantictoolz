@@ -119,20 +119,40 @@ export const DODO_PRODUCT_IDS = {
  * it would at full price. Deriving the plan from the amount would break the moment any
  * coupon existed.
  */
-export function getPlanFromProductId(productId: string): 'STARTER' | 'PRO' | 'AGENCY' | 'AGENCY_PLUS' | 'FREE' {
+export type PaidPlanKey = 'STARTER' | 'PRO' | 'AGENCY' | 'AGENCY_PLUS'
+
+/**
+ * Which plan each product grants, keyed by every product the app knows about.
+ *
+ * `Record<keyof typeof DODO_PRODUCT_IDS, ...>` is the whole point: adding a product id above
+ * without mapping it here is a **compile error**, not a silent FREE. This replaced a chain of
+ * `if` comparisons that had simply omitted two of the eight products — Starter annual and
+ * Agency Plus annual both fell through to FREE, so a customer could pay $90 or $990 and be
+ * granted nothing. Both products were live and purchasable when this was found, and FOUNDING50
+ * is restricted to Agency Plus annual, so the discounted founding-member path led directly into
+ * it. Nothing failed loudly: the payment succeeded, the webhook returned 200, and the account
+ * stayed on the free tier.
+ */
+const PRODUCT_PLAN: Record<keyof typeof DODO_PRODUCT_IDS, PaidPlanKey> = {
+  STARTER: 'STARTER',
+  STARTER_ANNUAL: 'STARTER',
+  PRO: 'PRO',
+  PRO_ANNUAL: 'PRO',
+  AGENCY: 'AGENCY',
+  AGENCY_ANNUAL: 'AGENCY',
+  AGENCY_PLUS: 'AGENCY_PLUS',
+  AGENCY_PLUS_ANNUAL: 'AGENCY_PLUS',
+}
+
+export function getPlanFromProductId(productId: string): PaidPlanKey | 'FREE' {
   // Guarded against the empty string, because an unset env var would otherwise match an
   // empty productId and silently grant a plan. Cheap to write, expensive to discover.
   if (!productId) return 'FREE'
-  if (productId === DODO_PRODUCT_IDS.AGENCY) return 'AGENCY'
-  if (DODO_PRODUCT_IDS.AGENCY_ANNUAL && productId === DODO_PRODUCT_IDS.AGENCY_ANNUAL) return 'AGENCY'
-  if (productId === DODO_PRODUCT_IDS.PRO) return 'PRO'
-  if (DODO_PRODUCT_IDS.PRO_ANNUAL && productId === DODO_PRODUCT_IDS.PRO_ANNUAL) return 'PRO'
-  // Guarded like the annual ids rather than compared directly: STARTER is empty until the
-  // product exists, and an unguarded comparison would be the empty-string bug above.
-  if (DODO_PRODUCT_IDS.STARTER && productId === DODO_PRODUCT_IDS.STARTER) return 'STARTER'
-  // Checked before AGENCY would be wrong — these are distinct ids, so order does not
-  // matter — but guarded like the others so an unset variable cannot match an empty id.
-  if (DODO_PRODUCT_IDS.AGENCY_PLUS && productId === DODO_PRODUCT_IDS.AGENCY_PLUS) return 'AGENCY_PLUS'
+  for (const key of Object.keys(PRODUCT_PLAN) as (keyof typeof PRODUCT_PLAN)[]) {
+    const configured = DODO_PRODUCT_IDS[key]
+    // The truthiness check is what keeps an unconfigured product from matching an empty id.
+    if (configured && configured === productId) return PRODUCT_PLAN[key]
+  }
   return 'FREE'
 }
 

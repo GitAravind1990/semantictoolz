@@ -69,7 +69,7 @@ export async function sendSubscriptionEmail(
 ) {
   try {
   if (!resend) {
-      console.log(`[Email] Resend not configured, skipping welcome email to ${to}`)
+      console.log(`[Email] Resend not configured, skipping subscription email to ${to}`)
       return
     }
     const html = await render(
@@ -237,7 +237,7 @@ export async function sendCancelledEmail(
 ) {
   try {
   if (!resend) {
-      console.log(`[Email] Resend not configured, skipping welcome email to ${to}`)
+      console.log(`[Email] Resend not configured, skipping cancellation email to ${to}`)
       return
     }
     const html = await render(
