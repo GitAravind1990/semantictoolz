@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import DodoPayments from 'dodopayments'
-import { getPlanFromProductId, dodoApiKey, dodoMode, dodoWebhookSecret } from '@/lib/dodopayments'
+import { getPlanFromProductId, dodoApiBase, dodoApiKey, dodoMode, dodoWebhookSecret } from '@/lib/dodopayments'
 import { prisma } from '@/lib/prisma'
 import { Plan } from '@prisma/client'
 import { captureServerEvent } from '@/lib/posthog-server'
@@ -331,6 +331,76 @@ export async function POST(req: NextRequest) {
               ? existingSub.currentPeriodEnd.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
               : undefined
             await sendCancelledEmail(cancelledUser.email, existingSub.plan, firstName, accessUntil).catch(() => {})
+          }
+        }
+      }
+    } else if (eventType.startsWith('refund.')) {
+      /**
+       * A refund returns the money, so it must also return the access.
+       *
+       * This is the one place access IS revoked mid-period, and it is deliberately the
+       * opposite of the cancellation branch above. Cancelling keeps access because the
+       * customer still paid for the period; a refund removes the payment that access rested
+       * on, so keeping it would hand out a paid month for free.
+       *
+       * Only a FULL refund revokes. A partial one is recorded and left alone — the customer
+       * has still paid for something, and guessing how much access a partial refund buys is
+       * worse than leaving it intact and letting a human decide.
+       */
+      const refund = event.data
+      const eventTimestamp = event.timestamp ? new Date(event.timestamp) : new Date()
+      const refundStatus: string = refund?.status ?? ''
+      if (refundStatus !== 'succeeded') {
+        console.log(`[Dodo Webhook] Refund ${refund?.refund_id} is ${refundStatus || 'statusless'} — no action`)
+      } else {
+        // The refund payload does not say whether it clears the whole payment, so the
+        // payment is read back: `refund_status` is 'full' or 'partial' there.
+        const { key } = dodoApiKey()
+        const paymentId: string = refund?.payment_id ?? ''
+        let refundStatusOnPayment: string | null = null
+        let subscriptionId: string | null = null
+
+        if (key && paymentId) {
+          const r = await fetch(`${dodoApiBase()}/payments/${paymentId}`, {
+            headers: { Authorization: `Bearer ${key}` },
+          })
+          if (r.ok) {
+            const payment = await r.json()
+            refundStatusOnPayment = payment?.refund_status ?? null
+            subscriptionId = payment?.subscription_id ?? null
+          } else {
+            console.error(`[Dodo Webhook] Could not read payment ${paymentId} for refund ${refund?.refund_id}: HTTP ${r.status}`)
+          }
+        }
+
+        if (refundStatusOnPayment !== 'full') {
+          console.log(`[Dodo Webhook] Refund ${refund?.refund_id} is ${refundStatusOnPayment ?? 'of unknown extent'} — access left intact`)
+        } else if (!subscriptionId) {
+          // A one-off payment rather than a subscription: nothing to revoke.
+          console.log(`[Dodo Webhook] Refund ${refund?.refund_id} has no subscription — nothing to revoke`)
+        } else {
+          const refundedSub = await prisma.subscription.findUnique({ where: { dodoSubscriptionId: subscriptionId } })
+          if (!refundedSub) {
+            console.warn(`[Dodo Webhook] Refund for unknown subscription ${subscriptionId}`)
+          } else {
+            // currentPeriodEnd is moved to now rather than left in the future, so every
+            // later read agrees the access is over — hasLapsed() is date-driven, and a
+            // future date there would keep re-granting the plan.
+            await prisma.subscription.update({
+              where: { id: refundedSub.id },
+              data: {
+                status: 'EXPIRED',
+                currentPeriodEnd: eventTimestamp,
+                cancelledAt: refundedSub.cancelledAt ?? eventTimestamp,
+                lastWebhookEventAt: eventTimestamp,
+              },
+            })
+
+            const refundedUser = await prisma.user.findUnique({ where: { id: refundedSub.userId } })
+            if (!isAlwaysAgency(refundedUser?.email)) {
+              await prisma.user.update({ where: { id: refundedSub.userId }, data: { plan: Plan.FREE } })
+            }
+            console.log(`[Dodo Webhook] Full refund ${refund?.refund_id} — revoked ${refundedSub.plan} access for subscription ${subscriptionId}`)
           }
         }
       }

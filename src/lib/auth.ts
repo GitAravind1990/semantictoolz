@@ -75,8 +75,16 @@ export function isAlwaysAgency(email?: string | null): boolean {
   return !!email && ALWAYS_AGENCY.has(email.trim().toLowerCase())
 }
 
+/**
+ * Whether a subscription has nothing left to honour.
+ *
+ * EXPIRED counts alongside CANCELLED because a full refund sets it: the webhook moves
+ * currentPeriodEnd to the refund moment and downgrades the account, and this is what keeps
+ * the downgrade stuck on every later read. Without EXPIRED here, the plan write would be a
+ * one-off that any subsequent subscription event could quietly undo.
+ */
 function hasLapsed(sub: { status: string; currentPeriodEnd: Date | null } | null): boolean {
-  if (!sub || sub.status !== 'CANCELLED') return false
+  if (!sub || (sub.status !== 'CANCELLED' && sub.status !== 'EXPIRED')) return false
   // A cancellation with no period end recorded has nothing left to honour.
   return !sub.currentPeriodEnd || sub.currentPeriodEnd <= new Date()
 }
