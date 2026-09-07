@@ -6,6 +6,7 @@ import { Plan } from '@prisma/client'
 import { captureServerEvent } from '@/lib/posthog-server'
 import { sendSubscriptionEmail, sendCancelledEmail, sendTrialStartedEmail } from '@/lib/email'
 import { getClerkFirstName, isAlwaysAgency } from '@/lib/auth'
+import { sanitizeRef } from '@/lib/referral'
 
 export const runtime = 'nodejs'
 
@@ -62,7 +63,10 @@ export async function POST(req: NextRequest) {
       eventType === 'subscription.renewed'
     ) {
       const sub = event.data
-      const metadata = sub.metadata as { userId?: string; clerkId?: string } | null
+      const metadata = sub.metadata as { userId?: string; clerkId?: string; ref?: string } | null
+      // Sanitised again on the way back in: this round-tripped through a third party, so it is
+      // no more trustworthy here than it was at checkout.
+      const referrer = sanitizeRef(metadata?.ref)
       const productId: string = sub.product_id ?? ''
       const planKey = getPlanFromProductId(productId)
       const plan = Plan[planKey]
@@ -162,6 +166,7 @@ export async function POST(req: NextRequest) {
               trialConvertedEmailSent: false,
               lastWebhookEventAt: eventTimestamp,
               ...(status === 'CANCELLED' ? { cancelledAt: eventTimestamp } : {}),
+              ...(referrer ? { referrer } : {}),
             },
             update: {
               dodoSubscriptionId: sub.subscription_id,
@@ -172,6 +177,10 @@ export async function POST(req: NextRequest) {
               currentPeriodEnd: periodEnd,
               lastWebhookEventAt: eventTimestamp,
               ...cancelStamp,
+              // Written only when present, so a renewal that arrives without metadata cannot
+              // erase the referrer recorded at signup. First attribution wins for the life of
+              // the subscription; a new cycle re-attributes only if it carries its own ref.
+              ...(referrer ? { referrer } : {}),
               ...(isNewCycle ? { welcomeEmailSent: false, trialConvertedEmailSent: false } : {}),
             },
           })

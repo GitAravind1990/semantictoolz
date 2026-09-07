@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import posthog from 'posthog-js'
 import { SignedIn, SignedOut } from './clerk-provider'
+import { readRef } from '@/lib/referral'
 
 const T = {
   sans: "'Switzer', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
@@ -220,6 +221,9 @@ function CheckoutButton({ productId, cta, featured, couponEligible, planName, is
         body: JSON.stringify({
           productId,
           ...(couponEligible && coupon.trim() ? { couponCode: coupon.trim() } : {}),
+          // Read at click time rather than on mount: the visitor may have arrived through a
+          // partner link on an earlier page in the same session.
+          ...(readRef() ? { ref: readRef() } : {}),
         }),
       })
       const data = await res.json()

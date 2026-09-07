@@ -283,10 +283,16 @@ model Subscription {
   welcomeEmailSent        Boolean            @default(false)
   trialConvertedEmailSent Boolean            @default(false)
   lastWebhookEventAt      DateTime?
+  /// Who referred this subscription, from the `?ref=` captured before checkout. Recorded
+  /// only — no partner programme exists and nothing pays out yet. Indexed because the one
+  /// query this will ever serve is "everything attributed to partner X".
+  referrer                String?
   createdAt               DateTime           @default(now())
   updatedAt               DateTime           @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([referrer])
 }
 
 model Usage {

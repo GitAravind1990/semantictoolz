@@ -3,6 +3,8 @@ import { ClerkProviderWrapper } from '@/components/clerk-provider'
 import { CookieBanner } from '@/components/cookie-banner'
 import { PHProvider } from '@/components/posthog-provider'
 import { PostHogUserIdentity } from '@/components/posthog-user-identity'
+import { ReferralCapture } from '@/components/referral-capture'
+import { Suspense } from 'react'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import localFont from 'next/font/local'
@@ -79,6 +81,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <ClerkProviderWrapper nonce={nonce}>
             {/* PostHogUserIdentity needs both Clerk context and PostHog initialised */}
             {hasPostHog && hasClerk && <PostHogUserIdentity />}
+            {/* Records ?ref= site-wide. In Suspense because it reads useSearchParams, which
+                opts its subtree out of static rendering — without the boundary every page
+                under this layout would become dynamic. */}
+            <Suspense fallback={null}>
+              <ReferralCapture />
+            </Suspense>
             {children}
             <CookieBanner />
           </ClerkProviderWrapper>

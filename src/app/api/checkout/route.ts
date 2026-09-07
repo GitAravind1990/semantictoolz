@@ -4,6 +4,7 @@ import { dodo, isCouponEligibleProduct } from '@/lib/dodopayments'
 import { prisma } from '@/lib/prisma'
 import { apiError, apiSuccess } from '@/lib/api'
 import { captureServerEvent } from '@/lib/posthog-server'
+import { sanitizeRef } from '@/lib/referral'
 
 export const runtime = 'nodejs'
 
@@ -12,8 +13,14 @@ export async function POST(req: NextRequest) {
     const { userId: clerkId } = await auth()
     if (!clerkId) return apiError({ message: 'Not authenticated', status: 401, name: 'AuthError' })
 
-    const { productId, couponCode } = await req.json()
+    const { productId, couponCode, ref } = await req.json()
     if (!productId) return apiError({ message: 'productId is required', status: 400, name: 'ValidationError' })
+
+    // Re-sanitised here even though the client already did: this value is attacker-controlled,
+    // travels to a third party, and comes back through a webhook into our database. An
+    // unusable ref is dropped rather than rejected — a referral must never cost someone their
+    // purchase.
+    const referrer = sanitizeRef(ref)
 
     // Plan restriction enforced here, not just in the browser. The client hides the field on
     // every plan but Agency annual; this is what makes that a rule rather than a suggestion,
@@ -43,7 +50,10 @@ export async function POST(req: NextRequest) {
     const session = await dodo.checkoutSessions.create({
       product_cart: [{ product_id: productId, quantity: 1 }],
       customer: { email, name },
-      metadata: { userId: user.id, clerkId },
+      // Dodo carries metadata through to the subscription object, which is how the webhook
+      // learns the referrer without a second lookup. Omitted entirely when absent, so
+      // unreferred subscriptions carry no empty key.
+      metadata: { userId: user.id, clerkId, ...(referrer ? { ref: referrer } : {}) },
       return_url: `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://Optmizly.com'}/dashboard/settings`,
       // discount_codes, not discount_code: the singular field is deprecated in the SDK in
       // favour of discount_id, and the plural takes the human-readable code. An invalid or
@@ -60,6 +70,7 @@ export async function POST(req: NextRequest) {
       from_plan: user?.plan ?? 'FREE',
       is_trial: false,
       coupon_code: code || null,
+      referrer: referrer || null,
     }).catch(() => {})
 
     return apiSuccess({ url: checkoutUrl })
