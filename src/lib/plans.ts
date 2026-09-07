@@ -24,12 +24,17 @@ export const TRIAL_LIMITS: Record<Plan, number> = {
 
 export const PLAN_TOOLS: Record<Plan, string[]> = {
   FREE: ['analyse', 'onpage'],
-  // STARTER buys volume, not access: the same two tools as FREE with 15 runs a month
-  // instead of 3. Keeping the tool list identical is what stops this plan touching the
-  // tool-count copy in /login, /signup, PRO_BENEFITS, the upgrade modal and the welcome
-  // banner — none of those numbers change, because no tier's tool count changed.
-  // Give it more tools and every one of those places needs updating in the same commit.
-  STARTER: ['analyse', 'onpage'],
+  // STARTER sees everything PRO does, and the two tiers differ only in volume: 15 units a
+  // month against 50. Derived from PRO below rather than retyped, so a tool added to Pro
+  // reaches Starter automatically — the same reason AGENCY_PLUS derives from AGENCY.
+  //
+  // This replaced a deliberate "Starter is the same two tools as Free" design. That version
+  // was a $9 plan selling nothing but a bigger allowance of the free tier, which is a hard
+  // thing to sell to someone who has not yet found the free tier valuable. Opening the tools
+  // up is safe because the allowance is denominated in **weighted units, not runs**: the
+  // DataForSEO-backed tools cost 2-3 units each, so 15 units buys at most five keyword
+  // researches a month. TOOL_COST_UNITS is what makes access and spend independent.
+  STARTER: [],
   PRO: ['analyse', 'onpage', 'eeat', 'citation', 'gap', 'rewrite', 'content-ideas', 'content-optimizer', 'competitor-spy', 'rank-tracker', 'ranking-engine', 'backlinks', 'keyword-tool'],
   AGENCY: ['analyse', 'onpage', 'client-finder', 'eeat', 'citation', 'gap', 'rewrite', 'serp', 'topical', 'local', 'tracker', 'content-ideas', 'content-optimizer', 'competitor-spy', 'rank-tracker', 'local-seo', 'seo-audit', 'geogrid', 'review-velocity', 'ranking-engine', 'backlinks', 'performance-fixer', 'search-console', 'client-reports', 'keyword-tool', 'ai-regex'],
   // Filled from AGENCY below rather than retyped. Agency already sees every tool, so this
@@ -42,6 +47,7 @@ export const PLAN_TOOLS: Record<Plan, string[]> = {
 // Assigned after the literal, because a Record cannot reference its own key while being
 // built. Kept adjacent so the relationship is impossible to miss.
 PLAN_TOOLS.AGENCY_PLUS = [...PLAN_TOOLS.AGENCY]
+PLAN_TOOLS.STARTER = [...PLAN_TOOLS.PRO]
 
 export function canUseTool(plan: Plan, tool: string): boolean {
   return PLAN_TOOLS[plan]?.includes(tool) ?? false

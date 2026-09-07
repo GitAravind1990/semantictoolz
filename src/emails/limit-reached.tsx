@@ -36,12 +36,14 @@ export function LimitReachedEmail({
   // is a lookup rather than a chain of ternaries.
   const NEXT: Record<string, { heading: string; detail: string }> = {
     FREE: {
-      heading: 'Upgrade to Pro ($19/month)',
-      detail: '50 analyses/month plus E-E-A-T analysis, AI rewriter, content gap finder, rank tracker, backlink finder and more.',
+      heading: 'Upgrade to Starter ($9/month)',
+      detail: 'All 12 tools unlocked — E-E-A-T analysis, AI rewriter, content gap finder, rank tracker, backlink finder — with 15 analyses a month.',
     },
+    // Starter already has every tool Pro has, so this sells volume only. Listing tools here
+    // would promise an unlock the customer is already paying for.
     STARTER: {
       heading: 'Upgrade to Pro ($19/month)',
-      detail: '50 analyses/month plus E-E-A-T analysis, AI rewriter, content gap finder, rank tracker, backlink finder and more.',
+      detail: '50 analyses/month instead of 15 — the same 12 tools, with room to run the data-heavy ones weekly.',
     },
     PRO: {
       heading: 'Upgrade to Agency ($49/month)',

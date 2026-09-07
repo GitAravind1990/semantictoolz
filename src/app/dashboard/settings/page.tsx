@@ -74,12 +74,41 @@ const PLAN_META: Record<Plan, { label: string; color: 'blue'|'amber'|'gray'; pri
   AGENCY_PLUS: { label: 'Agency Plus', color: 'amber', price: '$99/mo', limit: PLAN_LIMITS.AGENCY_PLUS, bg: 'from-amber-700 to-amber-500' },
 }
 
-// Starter deliberately unlocks the same two tools as Free — it buys volume, not access — so
-// it appears exactly where FREE does. Agency Plus sees everything Agency does.
+/**
+ * The next step up from each plan, or absent where there is none.
+ *
+ * `Partial<Record<Plan, …>>` so the two top tiers can legitimately have no entry — Agency
+ * Plus is the ceiling, and Agency's own upsell is handled by the billing tab. Free is sent
+ * to Starter rather than Pro: $9 unlocks all 12 tools, so pitching $19 asks for more than
+ * the tool they just hit a wall on costs.
+ */
+const UPGRADE_NUDGE: Partial<Record<Plan, { title: string; body: string; cta: string; amber: boolean }>> = {
+  FREE: {
+    title: 'Unlock all 12 tools with Starter',
+    body: 'Rank tracking, E-E-A-T, content gaps and backlinks — 15 analyses a month, $9/mo',
+    cta: 'See Starter Plan →',
+    amber: false,
+  },
+  STARTER: {
+    title: 'Need more runs? Pro has the same tools',
+    body: '50 analyses / month instead of 15, plus priority support ($19/mo)',
+    cta: 'See Pro Plan →',
+    amber: false,
+  },
+  PRO: {
+    title: 'Get Agency for more capacity',
+    body: '200 analyses / month + the full agency toolkit ($49/mo)',
+    cta: 'See Agency Plan →',
+    amber: true,
+  },
+}
+
+// Starter carries the same 12 tools as Pro and differs only in allowance, so it appears
+// wherever PRO does. Agency Plus sees everything Agency does.
 const ALL_TOOLS = [
   { label: 'Content Analyzer',  plans: ['FREE','STARTER','PRO','AGENCY','AGENCY_PLUS'] },
   { label: 'Issues Audit',      plans: ['FREE','STARTER','PRO','AGENCY','AGENCY_PLUS'] },
-  { label: 'Content Optimizer', plans: ['PRO','AGENCY','AGENCY_PLUS'] },
+  { label: 'Content Optimizer', plans: ['STARTER','PRO','AGENCY','AGENCY_PLUS'] },
   { label: 'More tools coming soon', plans: ['AGENCY','AGENCY_PLUS'] },
 ]
 
@@ -440,21 +469,17 @@ export default function SettingsPage() {
               </div>
             </Card>
 
-            {/* Upgrade nudge */}
-            {plan !== 'AGENCY' && (
-              <div className={`rounded-2xl p-5 ${plan === 'FREE' ? 'bg-blue-600' : 'bg-amber-500'} text-white`}>
-                <div className="font-black text-base mb-1">
-                  {plan === 'FREE' ? 'Unlock Content Optimizer with Pro' : 'Get Agency for more capacity'}
-                </div>
-                <div className="text-sm opacity-80 mb-4">
-                  {plan === 'FREE'
-                    ? 'Auto-fix your content issues with AI, starting at $19/mo'
-                    : '200 analyses / month + priority support ($49/mo)'}
-                </div>
+            {/* Upgrade nudge — one step up from wherever the customer already is.
+                Keyed per plan rather than by `plan !== 'AGENCY'`, which showed Agency Plus a
+                prompt to buy Agency: a downgrade, pitched to the highest-paying tier. */}
+            {UPGRADE_NUDGE[plan] && (
+              <div className={`rounded-2xl p-5 ${UPGRADE_NUDGE[plan]!.amber ? 'bg-amber-500' : 'bg-blue-600'} text-white`}>
+                <div className="font-black text-base mb-1">{UPGRADE_NUDGE[plan]!.title}</div>
+                <div className="text-sm opacity-80 mb-4">{UPGRADE_NUDGE[plan]!.body}</div>
                 <Link href="/pricing"
                   className="inline-block bg-white text-sm font-black px-6 py-2.5 rounded-xl hover:opacity-90 transition-opacity"
-                  style={{ color: plan === 'FREE' ? '#2563eb' : '#d97706' }}>
-                  {plan === 'FREE' ? 'See Pro Plan →' : 'See Agency Plan →'}
+                  style={{ color: UPGRADE_NUDGE[plan]!.amber ? '#d97706' : '#2563eb' }}>
+                  {UPGRADE_NUDGE[plan]!.cta}
                 </Link>
               </div>
             )}

@@ -12,10 +12,9 @@ interface SubscriptionEmailProps {
 }
 
 const PLAN_TOOLS: Record<string, string[]> = {
-  // Starter buys volume, not tools: the same two as the free tier with a bigger monthly
-  // allowance. Saying so plainly is better than listing features it does not include and
-  // having the first run refuse them.
-  Starter: ['Content Analysis', 'On-Page SEO', '15 analyses every month'],
+  // Starter now unlocks the same 12 tools as Pro and differs only in allowance, so the
+  // confirmation email lists what they actually just bought rather than the two free tools.
+  Starter: ['E-E-A-T Analysis', 'Relevant Backlinks', 'AI Rewrite (with framework)', 'Citation Plan', 'Content Gap', '15 analyses every month'],
   Pro: ['E-E-A-T Analysis', 'Relevant Backlinks', 'AI Rewrite (with framework)', 'Citation Plan', 'Content Gap', 'AI Queries'],
   Agency: ['Everything in Pro', 'AI Cite Tracker', 'Local SEO Suite (4 tools)', 'SERP Competitor Audit', 'Topical Authority Mapper ★'],
   'Agency Plus': ['Everything in Agency', 'Unlimited client projects', '5 team seats', '500 analyses every month', '10 prospect searches a day'],

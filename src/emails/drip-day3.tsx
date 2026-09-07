@@ -24,10 +24,10 @@ export function DripDay3Email({ firstName = 'there', pricingUrl }: DripDay3Props
 
             <Section className="bg-white rounded-2xl border border-slate-200 p-8 mb-6">
               <Heading className="text-2xl font-black text-slate-900 mb-2 mt-0">
-                Hey {firstName}, here's what Pro unlocks
+                Hey {firstName}, here's what $9 unlocks
               </Heading>
               <Text className="text-slate-600 text-base leading-relaxed mb-6">
-                You've been on the Free plan for a few days. Here are the tools most Pro users run first:
+                You've been on the Free plan for a few days. Starter opens all 12 tools — here are the ones people run first:
               </Text>
 
               {[
@@ -54,7 +54,7 @@ export function DripDay3Email({ firstName = 'there', pricingUrl }: DripDay3Props
                 href={pricingUrl}
                 className="bg-blue-600 text-white font-bold text-sm px-8 py-3 rounded-xl no-underline block text-center"
               >
-                Upgrade to Pro ($19/mo) →
+                Unlock all 12 tools ($9/mo) →
               </Button>
             </Section>
 

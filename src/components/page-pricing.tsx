@@ -60,19 +60,19 @@ const plans = [
     audience: 'For one site you have outgrown the free plan on',
     price: '$9',
     period: '/mo',
-    anchor: '15 analyses a month — 5× the Free plan, same two tools',
-    tagline: 'For running the core analysis often enough to act on it.',
+    anchor: 'All 12 tools, 15 analyses a month',
+    tagline: 'The full toolset, sized for one site.',
     color: 'gray',
     featured: false,
     /**
-     * Starter sells volume, not access. The features list says so in its second line
-     * rather than implying more: a plan whose first run refuses a tool the card seemed to
-     * promise is worse than one that never promised it.
+     * Starter and Pro now differ only in volume. The allowance is stated in the same breath
+     * as the toolset because the heavier tools spend 2-3 units per run — someone reading
+     * "12 tools" alone would plan for 15 runs and get five.
      */
     features: [
       'Everything in Free, plus:',
+      'All 12 tools — the same set as Pro',
       '15 analyses / month (5× the Free plan)',
-      'Same two tools as Free — Content Analysis and On-Page SEO',
       'Analysis history kept',
       'Email support',
     ],
@@ -88,18 +88,20 @@ const plans = [
     audience: 'For marketers optimizing every week',
     price: '$19',
     period: '/mo',
-    anchor: '50 analyses a month — 16× the Free plan, for $19',
+    anchor: 'The same 12 tools, 50 analyses a month',
     tagline: 'For growth teams optimizing across every search surface.',
     color: 'blue',
     featured: true,
+    /**
+     * Pro is a volume tier now, not an access tier — Starter sees the same 12 tools. The
+     * features list leads with the allowance for that reason; repeating the tool names here
+     * would read as an unlock that Starter customers already have.
+     */
     features: [
-      'Everything in Free, plus:',
-      '50 analyses / month (data-heavy tools count as 2–3)',
-      'Content Optimizer + Full Rewrite',
-      'E-E-A-T deep analysis',
-      'Relevant Backlinks finder',
-      'AI Ranking Engine',
-      'AI Visibility (Citation + Queries)',
+      'Everything in Starter, plus:',
+      '50 analyses / month — 3× Starter',
+      'Data-heavy tools count as 2–3 analyses',
+      'Enough headroom to run the full set weekly',
       'Priority support',
     ],
     cta: 'Get Pro',
@@ -687,9 +689,10 @@ export function PagePricing() {
                   ) : (
                     <tr key={i} style={{ borderBottom: `1px solid ${T.line2}` }}>
                       <td style={{ padding: '13px 16px', color: T.ink }}>{row.label}</td>
-                      {/* `row.starter ?? row.free` — see COMPARISON_ROWS. Column indices
-                          shifted by one, so Pro's accent is ci === 2, not 1. */}
-                      {[row.free, row.starter ?? row.free, row.pro, row.agency, row.agencyPlus ?? row.agency].map((val, ci) => (
+                      {/* `row.starter ?? row.pro` — Starter carries Pro's tool set, so Pro is
+                          the correct default; see COMPARISON_ROWS. Column indices shifted by
+                          one, so Pro's accent is ci === 2, not 1. */}
+                      {[row.free, row.starter ?? row.pro, row.pro, row.agency, row.agencyPlus ?? row.agency].map((val, ci) => (
                         <td key={ci} style={{ padding: '13px 16px', textAlign: 'center' }}>
                           {val === true
                             ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={ci === 2 ? T.blue : T.good} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block' }}><path d="M5 12l5 5L20 7"/></svg>
@@ -723,13 +726,13 @@ export function PagePricing() {
 }
 
 /**
- * `starter` is optional and falls back to `free` when omitted.
+ * `starter` is optional and falls back to **`pro`** when omitted.
  *
- * Starter is the Free tool set with a bigger allowance, so on 15 of these 17 rows the two
- * columns are identical by definition. Defaulting keeps them that way permanently — adding
- * a tool to Free can never leave Starter silently showing a dash — and means only the two
- * rows that genuinely differ carry a value. If Starter ever gains a tool of its own, give
- * that row an explicit `starter`.
+ * It used to fall back to `free`, which was correct while Starter was the Free tool set with
+ * a bigger allowance. Starter now carries the identical tool set to Pro and differs only in
+ * volume, so `pro` is the value that stays true on its own — and a tool added to Pro reaches
+ * the Starter column without anyone remembering to. Only the rows that genuinely differ
+ * (allowance, support) carry an explicit `starter`.
  *
  * `agencyPlus` works the same way and defaults to `agency`. Agency Plus has the identical
  * tool set — it sells volume, unlimited clients and seats — so only the four rows measuring
@@ -768,6 +771,10 @@ const FAQS = [
   {
     q: 'Is there a free plan?',
     a: 'Yes. The Free plan is free forever, no credit card required. You get 3 analyses per month and full access to content scoring, so you can see Optmizly\'s value before committing.',
+  },
+  {
+    q: 'What is the difference between Starter and Pro?',
+    a: 'Volume, and nothing else. Starter and Pro unlock the same 12 tools; Starter gives you 15 analyses a month and Pro gives you 50. Because the data-heavy tools cost two or three credits per run, 15 credits is roughly five runs of something like Keyword Research — enough to work on one site, and the point at which most people move up to Pro.',
   },
   {
     q: 'What counts as one analysis?',

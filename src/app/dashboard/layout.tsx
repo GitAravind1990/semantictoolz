@@ -87,11 +87,27 @@ const TOOL_GROUPS = [
 
 type Tool = typeof TOOL_GROUPS[0]['tools'][0]
 
+/**
+ * Which plans satisfy each gate, named explicitly rather than ranked.
+ *
+ * A rank comparison cannot express this: Starter sits below Pro on price and allowance but
+ * unlocks the same tools, so `rank >= rank` would lock a Starter customer out of what they
+ * paid for. Listing the satisfying plans is the only form that stays true.
+ *
+ * This also fixes a live bug. The previous version compared `userPlan === 'AGENCY'`, and
+ * 'AGENCY_PLUS' is not equal to 'AGENCY' — so the most expensive plan on the site saw
+ * **every tool locked**, Pro-tier ones included. Adding a plan to the enum without revisiting
+ * an equality check is how that happened; a missing key here now shows as a locked tool
+ * rather than silently granting, which is the safe direction, but keep this list complete.
+ */
+const UNLOCKED_BY: Record<string, ReadonlySet<string>> = {
+  FREE:   new Set(['FREE', 'STARTER', 'PRO', 'AGENCY', 'AGENCY_PLUS']),
+  PRO:    new Set(['STARTER', 'PRO', 'AGENCY', 'AGENCY_PLUS']),
+  AGENCY: new Set(['AGENCY', 'AGENCY_PLUS']),
+}
+
 function isUnlocked(minPlan: string, userPlan: string): boolean {
-  if (minPlan === 'FREE') return true
-  if (minPlan === 'PRO') return userPlan === 'PRO' || userPlan === 'AGENCY'
-  if (minPlan === 'AGENCY') return userPlan === 'AGENCY'
-  return false
+  return UNLOCKED_BY[minPlan]?.has(userPlan) ?? false
 }
 
 const TIER_BADGE: Record<string, string> = {
@@ -246,7 +262,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         <NavIcon id="lock" />
                       ) : tool.minPlan !== 'FREE' && !active && (
                         <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${TIER_BADGE[tool.minPlan] ?? ''}`}>
-                          {tool.minPlan === 'AGENCY' ? 'Agency' : 'Pro'}
+                          {/* The cheapest plan that unlocks it, not the tier it is grouped
+                              under: Pro-tier tools are included from Starter upward, so a
+                              "Pro" badge would name a costlier plan than the tool needs. */}
+                          {tool.minPlan === 'AGENCY' ? 'Agency' : 'Starter'}
                         </span>
                       )}
                     </Link>

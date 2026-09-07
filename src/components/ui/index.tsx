@@ -106,10 +106,12 @@ export function EmptyState({ icon, title, desc, cta }: {
 }
 
 // ── Locked state ──────────────────────────────────────────────────────────────
+// Shown when a Pro-tier tool is locked. Starter carries the same 12 tools, so this names
+// Starter's price and allowance — quoting Pro would ask for $19 to unlock something $9 buys.
 const PRO_BENEFITS = [
-  'Unlimited content analyses every month',
-  'All 12 Pro SEO tools (E-E-A-T, Gap, Keyword Research, Ranking Engine…)',
-  'Rank Tracker, AI citation optimiser & Agency reports',
+  'All 12 tools unlocked (E-E-A-T, Gap, Keyword Research, Ranking Engine…)',
+  '15 analyses a month on Starter, 50 on Pro',
+  'Rank Tracker, Backlinks & AI citation optimiser',
 ]
 
 const AGENCY_BENEFITS = [
@@ -120,7 +122,10 @@ const AGENCY_BENEFITS = [
 
 export function LockedState({ tool, plan }: { tool: string; plan: 'Pro' | 'Agency' }) {
   const benefits = plan === 'Agency' ? AGENCY_BENEFITS : PRO_BENEFITS
-  const price = plan === 'Agency' ? '$49/mo' : '$19/mo'
+  // `plan` is the tool's tier, not the plan to sell. Pro-tier tools unlock from Starter, so
+  // the cheapest honest price is $9 — quoting $19 upsells past what the tool actually needs.
+  const requiredPlan = plan === 'Agency' ? 'Agency' : 'Starter'
+  const price = plan === 'Agency' ? '$49/mo' : '$9/mo'
   const btnClass = plan === 'Agency'
     ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700'
     : 'bg-brand-600 hover:bg-brand-700'
@@ -137,7 +142,7 @@ export function LockedState({ tool, plan }: { tool: string; plan: 'Pro' | 'Agenc
         </div>
         <h3 className="text-xl font-black text-slate-900 text-center mb-2">{tool}</h3>
         <p className="text-sm text-slate-500 text-center mb-6">
-          This tool requires the <strong>{plan}</strong> plan.
+          This tool requires the <strong>{requiredPlan}</strong> plan.
         </p>
         <ul className="space-y-3 mb-6">
           {benefits.map(b => (
@@ -161,7 +166,7 @@ export function LockedState({ tool, plan }: { tool: string; plan: 'Pro' | 'Agenc
             tool_name: tool,
           })}
         >
-          Upgrade to {plan} ({price}) →
+          Upgrade to {requiredPlan} ({price}) →
         </a>
       </div>
     </div>

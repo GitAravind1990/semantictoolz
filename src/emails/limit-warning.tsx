@@ -25,8 +25,28 @@ export function LimitWarningEmail({
 }: LimitWarningEmailProps) {
   const remaining = limit - used
   const isFree = plan === 'FREE'
-  const isAgency = plan === 'AGENCY'
-  const planLabel = isFree ? 'free' : plan === 'STARTER' ? 'Starter' : plan === 'PRO' ? 'Pro' : 'Agency'
+  const planLabel = isFree ? 'free'
+    : plan === 'STARTER' ? 'Starter'
+    : plan === 'PRO' ? 'Pro'
+    : plan === 'AGENCY_PLUS' ? 'Agency Plus'
+    : 'Agency'
+
+  /**
+   * The next tier up, or nothing at the ceiling. A lookup rather than `isFree ? Pro : Agency`,
+   * which sent Starter customers straight past Pro to the $49 plan, and — since it keyed off
+   * `plan === 'AGENCY'` alone — pitched Agency to Agency Plus, the tier above it.
+   */
+  const NEXT: Record<string, { heading: string; detail: string }> = {
+    FREE:    { heading: 'Upgrade to Starter: all 12 tools, 15 analyses/month',
+               detail: 'E-E-A-T analysis, AI rewriter, content gap finder, rank tracker, backlink finder and more — $9/mo.' },
+    STARTER: { heading: 'Upgrade to Pro: 50 analyses/month',
+               detail: 'The same 12 tools with more than three times the volume, plus priority support.' },
+    PRO:     { heading: 'Upgrade to Agency: 200 analyses/month',
+               detail: 'Plus SERP audits, local SEO suite, topical authority mapping, client reports and more.' },
+    AGENCY:  { heading: 'Upgrade to Agency Plus: 500 analyses/month',
+               detail: 'Unlimited client projects, 5 team seats and double the prospect searches.' },
+  }
+  const nextTier = NEXT[plan]
   const analysesLabel = isFree ? 'free analyses' : `${planLabel} plan analyses`
 
   return (
@@ -50,20 +70,14 @@ export function LimitWarningEmail({
                 You have <strong>{remaining} {remaining === 1 ? 'analysis' : 'analyses'}</strong> left before the monthly reset.
               </Text>
 
-              {!isAgency && (
+              {nextTier && (
                 <Section className="bg-blue-50 rounded-xl border border-blue-100 px-5 py-4 mb-6">
-                  <Text className="text-sm font-bold text-blue-900 m-0 mb-1">
-                    {isFree ? 'Upgrade to Pro: 50 analyses/month' : 'Upgrade to Agency: 200 analyses/month'}
-                  </Text>
-                  <Text className="text-sm text-blue-700 m-0">
-                    {isFree
-                      ? 'Plus E-E-A-T analysis, AI rewriter, content gap finder, rank tracker, backlink finder and more.'
-                      : 'Plus SERP audits, local SEO suite, topical authority mapping, client reports and more.'}
-                  </Text>
+                  <Text className="text-sm font-bold text-blue-900 m-0 mb-1">{nextTier.heading}</Text>
+                  <Text className="text-sm text-blue-700 m-0">{nextTier.detail}</Text>
                 </Section>
               )}
 
-              {!isAgency && (
+              {nextTier && (
                 <Button
                   href={pricingUrl}
                   className="bg-blue-600 text-white font-bold text-sm px-8 py-3 rounded-xl no-underline block text-center"

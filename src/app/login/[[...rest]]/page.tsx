@@ -49,7 +49,9 @@ export default function SignInPage() {
 
         <div className="border-t border-white/10 pt-8">
           <div className="flex gap-8">
-            {[['23', 'AI tools'], ['8', 'Score dims'], ['3', 'Plan tiers']].map(([n, l]) => (
+            {/* Five tiers: Free, Starter, Pro, Agency, Agency Plus. Read this off the plan
+                list, not from memory — it said 3 for weeks after two tiers were added. */}
+            {[['23', 'AI tools'], ['8', 'Score dims'], ['5', 'Plan tiers']].map(([n, l]) => (
               <div key={l}>
                 <div className="text-2xl font-black">{n}</div>
                 <div className="text-xs text-slate-400 mt-0.5">{l}</div>

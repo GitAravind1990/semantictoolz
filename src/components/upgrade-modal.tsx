@@ -49,31 +49,33 @@ function copyForPlan(plan: string, limit: number | null): PlanCopy {
       cta: { label: 'Upgrade to Agency ($49/mo) →', href: '/pricing' },
     }
   }
-  // Starter is a paid plan, so it needs its own branch rather than the free fallback
-  // below — a paying customer told they have "hit your free limit" is being described
-  // as something they are not, and the upsell has to name Pro's tools as the thing they
-  // are actually buying, since Starter's own tool list is identical to Free's.
+  // Starter is a paid plan, so it needs its own branch rather than the free fallback below —
+  // a paying customer told they have "hit your free limit" is being described as something
+  // they are not. Starter now carries the same 12 tools as Pro, so the only honest upsell
+  // here is volume; naming tools would promise an unlock they already have.
   if (plan === 'STARTER') {
     return {
       heading: "You've hit your Starter limit",
-      body: `You've used all ${limit ?? 15} analyses this month. Upgrade to Pro for more runs and 10 more tools.`,
+      body: `You've used all ${limit ?? 15} analyses this month. Pro runs the same 12 tools with more than three times the volume.`,
       benefits: [
         '50 analyses every month (vs 15 on Starter)',
-        'All Pro tools unlocked (E-E-A-T, Gap, Rank Tracker…)',
-        'Ranking Engine, Backlinks & AI citation optimiser',
+        'Enough headroom to run the data-heavy tools weekly',
+        'Priority support',
       ],
       cta: { label: 'Upgrade to Pro ($19/mo) →', href: '/pricing' },
     }
   }
+  // Free users are pointed at Starter, not Pro: $9 unlocks all 12 tools, so recommending
+  // the $19 plan would sell them more than they need to get what they just hit a wall on.
   return {
     heading: "You've hit your free limit",
-    body: "You've used all your free analyses this month. Upgrade to Pro for more runs across 12 tools.",
+    body: "You've used all your free analyses this month. Starter unlocks all 12 tools with 5× the runs, for $9.",
     benefits: [
-      '50 content analyses every month',
-      'All Pro SEO tools unlocked (E-E-A-T, Gap, Rank Tracker…)',
+      'All 12 tools unlocked (E-E-A-T, Gap, Rank Tracker…)',
+      '15 analyses every month (vs 3 on Free)',
       'Ranking Engine, Backlinks & AI citation optimiser',
     ],
-    cta: { label: 'Upgrade to Pro ($19/mo) →', href: '/pricing' },
+    cta: { label: 'Get Starter ($9/mo) →', href: '/pricing' },
   }
 }
 

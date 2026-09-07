@@ -11,19 +11,35 @@ marketing figures. Counts are cumulative by tier, since each plan sees the tiers
 | Tier | Sees | Claim to use |
 |---|---|---|
 | Free | 2 | — |
-| Starter | 2 | never "more tools" — Starter buys volume, not access |
-| Pro | 12 | "12 Pro tools", never "all tools" |
+| Starter | 12 | "all 12 tools" — same set as Pro, at 15 analyses instead of 50 |
+| Pro | 12 | volume over Starter, never "more tools" |
 | Agency | 23 | "all 23 tools" |
+| Agency Plus | 23 | volume, unlimited clients and seats — never "more tools" |
 
-**Starter is deliberately the same two tools as Free**, at 15 analyses a month instead of
-3. That is the whole reason adding it did not touch any tool-count copy: no tier's count
-changed. Give Starter a third tool and every count above has to be rechecked along with
-the six places listed below.
+**Starter and Pro see the identical 12 tools and differ only in allowance** (15 vs 50), as of
+2026-09-06. `PLAN_TOOLS.STARTER` is derived from `PLAN_TOOLS.PRO` rather than retyped, the
+same way `AGENCY_PLUS` derives from `AGENCY`, so a tool added to Pro reaches Starter
+automatically.
 
-Pro does **not** get everything, so a Pro-facing upgrade prompt must say 12, not 23.
+This replaced a design where Starter was the same two tools as Free. Opening the tools up is
+safe on cost because **the allowance is denominated in weighted units, not runs**: the
+DataForSEO-backed tools cost 2-3 units each, so 15 units buys at most five keyword researches
+a month. `TOOL_COST_UNITS` is what keeps access and spend independent.
+
+**Consequence for upsell copy: the cheapest plan that unlocks a Pro-tier tool is Starter at
+$9, not Pro at $19.** A locked-tool prompt naming Pro asks for twice what the tool needs.
+Free-tier upsells point at Starter; Starter upsells sell volume only, never tools.
+
 Adding a nav entry means updating the count in: `/login`, `/signup`, `PRO_BENEFITS` in
 `src/components/ui/index.tsx`, `src/components/upgrade-modal.tsx`,
 `src/components/welcome-banner.tsx`, and this file.
+
+**Gating must never be written as a plan-rank comparison or an equality check.** Starter
+ranks below Pro on price yet unlocks the same tools, so `rank >= rank` locks paying customers
+out. And `userPlan === 'AGENCY'` silently excluded `AGENCY_PLUS` — the most expensive plan on
+the site saw *every* tool locked. Name the satisfying plans explicitly, as `UNLOCKED_BY` in
+`src/app/dashboard/layout.tsx` does, and prefer `Record<Plan, …>` so a new tier is a compile
+error rather than a silent downgrade.
 
 ## Tech Stack
 
