@@ -53,6 +53,17 @@ export function dodoWebhookSecret(): { secret: string | undefined; varName: stri
     : { secret: process.env.DODO_WEBHOOK_SECRET, varName: 'DODO_WEBHOOK_SECRET' }
 }
 
+/**
+ * REST base for the current mode, for the few calls made with `fetch` rather than the SDK.
+ * Follows DODO_MODE for the same reason the key does: a test deployment calling the live
+ * host would act on real customers.
+ */
+export function dodoApiBase(): string {
+  return dodoMode() === 'test_mode'
+    ? 'https://test.dodopayments.com'
+    : 'https://live.dodopayments.com'
+}
+
 function getDodoInstance(): DodoPayments {
   if (!dodoInstance) {
     const mode = dodoMode()

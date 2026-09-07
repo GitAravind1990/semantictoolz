@@ -568,7 +568,7 @@ export default function SettingsPage() {
                   <p className="text-xs text-slate-400 mb-6">You&apos;re on the Free plan · {PLAN_LIMITS.FREE} analyses per month</p>
                   <Link href="/pricing"
                     className="inline-block rounded-xl bg-blue-600 px-8 py-3 text-sm font-bold text-white hover:bg-blue-700 transition-colors">
-                    Upgrade to Pro ($19/mo) →
+                    Unlock all 12 tools ($9/mo) →
                   </Link>
                 </div>
               )}
