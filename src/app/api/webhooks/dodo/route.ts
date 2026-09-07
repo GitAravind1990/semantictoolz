@@ -135,6 +135,19 @@ export async function POST(req: NextRequest) {
             }
           }
 
+          // A cancellation can arrive here rather than in the subscription.cancelled branch:
+          // Dodo sends subscription.updated carrying status "cancelled" when someone cancels
+          // from the customer portal. mapStatus records that correctly, but this branch never
+          // stamped cancelledAt — so a portal cancellation left it null while status said
+          // CANCELLED. Observed live 2026-09-07. Nothing user-facing broke (the settings notice
+          // and hasLapsed both key off status), but /api/admin/stats counts a null cancelledAt
+          // as still-subscribed and never-churned, so churn silently under-reported.
+          //
+          // Cleared again on a genuinely new cycle, or a resubscribe would stay marked churned.
+          const cancelStamp = status === 'CANCELLED'
+            ? { cancelledAt: existingSub?.cancelledAt ?? eventTimestamp }
+            : isNewCycle ? { cancelledAt: null } : {}
+
           await prisma.subscription.upsert({
             where: { userId },
             create: {
@@ -148,6 +161,7 @@ export async function POST(req: NextRequest) {
               welcomeEmailSent: false,
               trialConvertedEmailSent: false,
               lastWebhookEventAt: eventTimestamp,
+              ...(status === 'CANCELLED' ? { cancelledAt: eventTimestamp } : {}),
             },
             update: {
               dodoSubscriptionId: sub.subscription_id,
@@ -157,6 +171,7 @@ export async function POST(req: NextRequest) {
               plan,
               currentPeriodEnd: periodEnd,
               lastWebhookEventAt: eventTimestamp,
+              ...cancelStamp,
               ...(isNewCycle ? { welcomeEmailSent: false, trialConvertedEmailSent: false } : {}),
             },
           })
