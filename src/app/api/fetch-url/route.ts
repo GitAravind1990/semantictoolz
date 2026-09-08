@@ -6,6 +6,69 @@ import { validateUrl } from '@/lib/ssrf-guard'
 
 export const runtime = 'nodejs'
 
+/**
+ * Summarises the markup signals before they are stripped.
+ *
+ * The analyser scores eight dimensions, four of which — technical SEO, on-page SEO, structured
+ * data and E-E-A-T — measure things that live only in markup. extractMainContent removes every
+ * tag, so those four were being scored against text where the evidence could not exist, and
+ * they returned near-zero for every URL regardless of the page.
+ *
+ * Measured before this existed: Google's own SEO starter guide scored 15/100 and Moz's
+ * beginners guide 28/100, both grade D, while their prose-based dimensions scored 40-45. A user
+ * analysing a page they know is good got a D and reasonably concluded the tool was broken.
+ *
+ * This reports what is present, not whether it is good — the analyser still judges. Absence is
+ * stated explicitly rather than omitted, because "no author markup" is itself the finding, and
+ * a silent omission would read as an unanswered question.
+ */
+function extractPageSignals(html: string, finalUrl: string): string {
+  const head = html.slice(0, 200_000)
+  const one = (re: RegExp): string | null => {
+    const m = head.match(re)
+    return m?.[1]?.trim().replace(/\s+/g, ' ').slice(0, 300) || null
+  }
+
+  const title = one(/<title[^>]*>([\s\S]*?)<\/title>/i)
+  const desc = one(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']*)["']/i)
+    ?? one(/<meta[^>]+content=["']([^"']*)["'][^>]+name=["']description["']/i)
+  const canonical = one(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']*)["']/i)
+  const ogTitle = one(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']*)["']/i)
+
+  // Schema.org @type values, which is what "does this page have structured data" actually means.
+  const ldTypes = new Set<string>()
+  for (const m of head.matchAll(/<script[^>]+application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi)) {
+    for (const t of (m[1] ?? '').matchAll(/"@type"\s*:\s*"([^"]+)"/g)) ldTypes.add(t[1])
+  }
+
+  // The heading outline, which carries the document structure that stripping destroys.
+  const headings: string[] = []
+  for (const m of head.matchAll(/<(h[1-3])[^>]*>([\s\S]*?)<\/\1>/gi)) {
+    const text = (m[2] ?? '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+    if (text) headings.push(`${m[1].toUpperCase()}: ${text.slice(0, 90)}`)
+    if (headings.length >= 15) break
+  }
+
+  const hasAuthor = /rel=["']author["']|name=["']author["']|"author"\s*:|class=["'][^"']*\bauthor\b/i.test(head)
+  const hasDates = /datePublished|dateModified|<time[^>]+datetime=/i.test(head)
+
+  return [
+    '=== PAGE SIGNALS (read from the HTML before tags were stripped) ===',
+    `URL: ${finalUrl}`,
+    `Title: ${title ?? 'MISSING'}`,
+    `Meta description: ${desc ?? 'MISSING'}`,
+    `Canonical: ${canonical ?? 'MISSING'}`,
+    `Open Graph title: ${ogTitle ?? 'MISSING'}`,
+    `Structured data (schema.org @type): ${ldTypes.size ? [...ldTypes].join(', ') : 'NONE FOUND'}`,
+    `Author markup: ${hasAuthor ? 'present' : 'MISSING'}`,
+    `Published/modified dates: ${hasDates ? 'present' : 'MISSING'}`,
+    `Heading outline (${headings.length} found):`,
+    ...(headings.length ? headings.map(h => `  ${h}`) : ['  NONE FOUND']),
+    '=== PAGE CONTENT ===',
+    '',
+  ].join('\n')
+}
+
 function extractMainContent(html: string): string {
   // 1. Remove entire noise blocks (including their inner content)
   const cleaned = html
@@ -106,6 +169,9 @@ export async function POST(req: NextRequest) {
     }
 
     const html = await res.text()
+    // Signals first, from the intact HTML. The length check below still measures the prose
+    // alone, so a page with rich markup and no readable text is still correctly rejected
+    // rather than passing on the strength of its meta tags.
     const text = extractMainContent(html).slice(0, 50000)
 
     // Also an AuthError for the same reason. This one fires most often on JavaScript-rendered
@@ -118,7 +184,9 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    return apiSuccess({ content: text })
+    // Signals prepended to the prose, so the analyser scores the markup dimensions against
+    // what the page actually declares rather than against text those tags were removed from.
+    return apiSuccess({ content: extractPageSignals(html, res.url || url) + text })
   } catch (e) {
     return apiError(e)
   }

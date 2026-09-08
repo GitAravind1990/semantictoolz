@@ -46,6 +46,18 @@ CATEGORY MAPPING (MANDATORY):
 - If issue mentions: unsourced claims, citations, attribution, reviews, evidence → category: "citations"
 - If issue mentions: vague, shallow, lacking details, weak explanations → category: "semantic"
 
+PAGE SIGNALS:
+Content fetched from a URL begins with a "=== PAGE SIGNALS ===" block listing what the page's
+HTML declares: title, meta description, canonical, structured data types, author markup, dates
+and heading outline. Score technical_seo, on_page_seo, structured_data and eeat_signals from
+that block — it is the only evidence of markup, because the tags themselves are stripped before
+the body text reaches you. A field marked MISSING or NONE FOUND is a genuine absence and should
+be scored and reported as one. When the block is not present the content was pasted directly,
+so judge those four dimensions on the text alone and say so rather than assuming the markup is
+absent.
+Never quote the block back as if it were body copy, and never treat it as content to score for
+readability.
+
 RULES:
 - overall_score: 0-100
 - grade: S(90+) A(80+) B(70+) C(55+) D(<55)
