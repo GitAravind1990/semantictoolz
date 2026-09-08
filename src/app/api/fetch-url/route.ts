@@ -1,6 +1,7 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { apiError, apiSuccess } from '@/lib/api'
+import { AuthError } from '@/lib/auth'
 import { validateUrl } from '@/lib/ssrf-guard'
 
 export const runtime = 'nodejs'
@@ -88,12 +89,34 @@ export async function POST(req: NextRequest) {
     })
     clearTimeout(timeout)
 
-    if (!res.ok) throw new Error(`Failed to fetch URL: ${res.status}`)
+    // AuthError, not a bare Error. `apiError` matches none of its branches on a plain Error and
+    // falls through to a generic 500 "Internal server error", discarding the message — so a
+    // mistyped URL was reported to the user as OUR server failing. Observed live: a 404 on the
+    // target page surfaced in the dashboard as "Internal server error", which is wrong about
+    // whose fault it is and gives the user nothing to act on.
+    if (!res.ok) {
+      throw new AuthError(
+        422,
+        res.status === 404
+          ? 'That page returned 404 — check the URL and try again.'
+          : res.status === 403 || res.status === 401
+          ? 'That site refused our request. Some sites block automated readers; paste the text instead.'
+          : `That page could not be loaded (HTTP ${res.status}). Try another URL, or paste the text instead.`,
+      )
+    }
 
     const html = await res.text()
     const text = extractMainContent(html).slice(0, 50000)
 
-    if (text.length < 100) throw new Error('Could not extract enough content from that URL')
+    // Also an AuthError for the same reason. This one fires most often on JavaScript-rendered
+    // pages, where the HTML carries almost no text — so the message names that cause rather
+    // than implying the page is empty.
+    if (text.length < 100) {
+      throw new AuthError(
+        422,
+        'We could not read enough text from that page. It may render its content with JavaScript — paste the text instead.',
+      )
+    }
 
     return apiSuccess({ content: text })
   } catch (e) {
