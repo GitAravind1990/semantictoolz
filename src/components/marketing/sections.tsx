@@ -714,14 +714,16 @@ export function FounderSection() {
           }}>
             See What We’re Building <Icon name="arrow" size={16} color={T.blue} />
           </Link>
-          <a href="mailto:hello@optmizly.com" style={{
+          {/* Points at /contact rather than a raw mailto: the page names which address handles
+              what and states a reply time, and a mailto does neither. */}
+          <Link href="/contact" style={{
             display: 'inline-flex', alignItems: 'center', gap: 8,
             padding: '0 24px', height: 50, borderRadius: 14,
             fontFamily: T.sans, fontSize: 15.5, fontWeight: 600,
             background: 'transparent', color: T.body, textDecoration: 'none',
           }}>
             Email me directly
-          </a>
+          </Link>
         </div>
       </div>
     </section>

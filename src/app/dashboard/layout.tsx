@@ -331,7 +331,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </button>
             <div className="flex-1 flex items-center justify-end gap-5">
             {[
-              ['Help', 'mailto:hello@optmizly.com'],
+              ['Help', '/contact'],
             ].map(([label, href]) => (
               <Link key={label} href={href} className="text-xs font-medium text-slate-400 hover:text-slate-700 transition-colors">
                 {label}
@@ -353,7 +353,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {[
                 ['Privacy', '/privacy'],
                 ['Terms', '/terms'],
-                ['Contact', 'mailto:hello@optmizly.com'],
+                ['Contact', '/contact'],
               ].map(([label, href]) => (
                 <Link key={label} href={href} className="text-[11px] text-slate-300 hover:text-slate-500 transition-colors">
                   {label}

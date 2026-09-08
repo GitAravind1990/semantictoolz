@@ -95,7 +95,9 @@ const orgJsonLd = JSON.stringify({
       logo: 'https://optmizly.com/logo.png',
       description:
         'AI search optimization platform covering SEO, GEO and AEO — auditing, optimizing and monitoring how websites appear in Google and in AI-generated answers.',
-      email: 'hello@optmizly.com',
+      // The address the Terms and Refund Policy both publish as the support contact, so this
+      // schema field names an inbox that is documented as monitored.
+      email: 'support@Optmizly.com',
       sameAs: ['https://x.com/optmizly', 'https://linkedin.com/company/optmizly'],
     },
     {
@@ -234,7 +236,7 @@ export default function HomePage() {
             <div style={{ display: 'flex', gap: 20 }}>
               <Link href="/privacy" style={{ color: T.muted, textDecoration: 'none' }}>Privacy</Link>
               <Link href="/terms" style={{ color: T.muted, textDecoration: 'none' }}>Terms</Link>
-              <a href="mailto:hello@optmizly.com" style={{ color: T.muted, textDecoration: 'none' }}>Contact</a>
+              <Link href="/contact" style={{ color: T.muted, textDecoration: 'none' }}>Contact</Link>
             </div>
           </div>
         </div>
