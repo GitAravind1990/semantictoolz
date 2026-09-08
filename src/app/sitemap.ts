@@ -22,6 +22,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${APP_URL}/tools/ai-regex`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.9 },
     { url: `${APP_URL}/tools/eeat`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.9 },
     ...posts,
+    // Above the legal pages: these two carry the trust signals a first-time visitor and an
+    // AI crawler both look for — who builds this, and how to reach them.
+    { url: `${APP_URL}/about`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${APP_URL}/contact`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.5 },
     { url: `${APP_URL}/privacy`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.3 },
     { url: `${APP_URL}/terms`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.3 },
     { url: `${APP_URL}/refund-policy`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.2 },

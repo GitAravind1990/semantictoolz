@@ -683,7 +683,7 @@ export function FounderSection() {
             is new, and I am one person. There is no case-study wall on this page because there
             are no case studies yet, and I would rather say that than fill the space with
             stock photos and invented numbers. What I can offer instead is the product itself —
-            a free tier that does not expire, three tools that need no account at all, and an
+            a free tier that does not expire, four tools that need no account at all, and an
             audit that shows you everything it finds rather than holding half of it back.
           </p>
           <p style={{ margin: 0 }}>

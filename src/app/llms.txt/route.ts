@@ -68,6 +68,8 @@ ${guides}
 
 ## Optional
 
+- [About](${APP_URL}/about): Who builds Optmizly, why it exists, and an honest account of how early it is.
+- [Contact](${APP_URL}/contact): How to reach support, billing, privacy and security.
 - [Privacy Policy](${APP_URL}/privacy): What data is collected, which sub-processors receive it, and how long it is kept.
 - [Terms of Service](${APP_URL}/terms): Plan limits, billing frequency and cancellation behaviour.
 - [Refund Policy](${APP_URL}/refund-policy): When the card is charged and what access survives a cancellation.

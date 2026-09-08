@@ -199,7 +199,10 @@ export default function HomePage() {
               ]],
               ['Product', [['Pricing', '/pricing'], ['Sign in', '/login'], ['Start free', '/signup']]],
               ['Resources', [['Blog', '/blog'], ['Privacy Policy', '/privacy'], ['Terms of Service', '/terms'], ['Refund Policy', '/refund-policy']]],
-              ['Company', [['Contact', 'mailto:hello@optmizly.com']]],
+              // Was a bare mailto to hello@optmizly.com — an address that appears nowhere else
+              // in the codebase, so quite possibly nobody's inbox. Both destinations are now
+              // real pages listing the addresses that are actually monitored.
+              ['Company', [['About', '/about'], ['Contact', '/contact']]],
             ].map(([h, items]) => (
               <div key={h as string}>
                 <div style={{ fontFamily: T.sans, fontSize: 13, fontWeight: 600, color: T.ink, marginBottom: 16 }}>{h as string}</div>
