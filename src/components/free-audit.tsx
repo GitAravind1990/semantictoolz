@@ -14,6 +14,7 @@ import { useState, useRef } from 'react'
 import Link from 'next/link'
 import posthog from 'posthog-js'
 import { T, Icon } from './marketing/tokens'
+import { savePendingAudit } from '@/lib/pending-audit'
 
 interface Category {
   id: string
@@ -129,6 +130,9 @@ export function FreeAudit({ location = 'homepage' }: { location?: string }) {
 
       const data: Report = json.data
       setReport(data)
+      // Kept so the dashboard can offer to pick this URL straight back up after signup,
+      // rather than presenting an empty box to someone who just analysed something.
+      savePendingAudit(data.finalUrl ?? url.trim(), data.score)
       posthog.capture('free_audit_completed', {
         location,
         score: data.score,

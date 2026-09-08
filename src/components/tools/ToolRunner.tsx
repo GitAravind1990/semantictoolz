@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Button } from '@/components/ui'
 import { useContent } from '@/context/ContentContext'
 import { UpgradeModal } from '@/components/upgrade-modal'
@@ -14,15 +14,27 @@ type AnalysisResult = {
 
 interface ToolRunnerProps {
   onResult?: (result: AnalysisResult, content: string) => void
+  /**
+   * Pre-fills the URL box. Used by the free-audit handoff so someone arriving from the public
+   * audit does not retype the URL they analysed a minute ago. Uncontrolled after mount — the
+   * parent seeds it, the user owns it from then on.
+   */
+  initialUrl?: string
 }
 
-export function ToolRunner({ onResult }: ToolRunnerProps) {
+export function ToolRunner({ onResult, initialUrl }: ToolRunnerProps) {
   const { content, setContent } = useContent()
-  const [urlInput, setUrlInput] = useState('')
+  const [urlInput, setUrlInput] = useState(initialUrl ?? '')
   const [fetchLoading, setFetchLoading] = useState(false)
   const [analyseLoading, setAnalyseLoading] = useState(false)
   const [error, setError] = useState('')
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+
+  // A later seed wins, so accepting the handoff after the page has mounted still fills the
+  // box. Guarded on a truthy value so this never clears what the user has typed.
+  useEffect(() => {
+    if (initialUrl) setUrlInput(initialUrl)
+  }, [initialUrl])
 
   const runAnalysis = useCallback(async (contentToAnalyse?: string, contentUrl?: string) => {
     if (analyseLoading) return

@@ -6,6 +6,7 @@ import { exportScoresCSV, exportScoresPDF, exportEntitiesCSV, exportEntitiesPDF 
 import { Card, ScoreBar, Badge, EmptyState } from '@/components/ui'
 import { useContent } from '@/context/ContentContext'
 import { ShareScoreButton } from '@/components/share-score-button'
+import { ContinueFromAudit } from '@/components/continue-from-audit'
 import Link from 'next/link'
 
 type Tab = 'scores' | 'issues' | 'entities'
@@ -48,6 +49,8 @@ export default function DashboardPage() {
   const { analysisResult, setAnalysisResult, setContent } = useContent()
   const [tab, setTab] = useState<Tab>('scores')
   const [history, setHistory] = useState<HistoryItem[]>([])
+  // Set when someone accepts the free-audit handoff; seeds the runner's URL box.
+  const [handoffUrl, setHandoffUrl] = useState<string | undefined>(undefined)
 
   useEffect(() => {
     fetch('/api/history').then(r => r.json()).then(d => { if (Array.isArray(d)) setHistory(d) }).catch(() => {})
@@ -81,7 +84,12 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <ToolRunner onResult={handleResult} />
+      {/* Sits above the runner rather than inside it: the offer is about where the user came
+          from, not about how the tool works, and it disappears once taken or dismissed. */}
+      <div className="px-6 pt-5 shrink-0">
+        <ContinueFromAudit onUse={setHandoffUrl} />
+      </div>
+      <ToolRunner onResult={handleResult} initialUrl={handoffUrl} />
 
       {analysisResult && (
         <div className="flex gap-1 px-6 pt-3 border-b border-slate-200 bg-white shrink-0">
