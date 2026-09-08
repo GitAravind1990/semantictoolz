@@ -51,7 +51,11 @@ async function fetchWithRedirects(url: string, timeoutMs = 12000): Promise<Fetch
     }
     break
   }
-  if (!res) throw new Error('No response from URL')
+  // AuthError so apiError returns this message rather than swallowing it into a generic 500.
+  // Reached when the redirect chain ends without a response — a dead or endlessly redirecting
+  // URL — which is the user's URL to fix, not a fault on our side. Thrown from a helper, but
+  // the caller's catch refunds the quota either way.
+  if (!res) throw new AuthError(422, 'That URL did not return a page. Check it resolves, and that it is not stuck in a redirect loop.')
 
   const headers: Record<string, string> = {}
   res.headers.forEach((v, k) => { headers[k] = v })

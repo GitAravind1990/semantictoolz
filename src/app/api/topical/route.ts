@@ -120,7 +120,13 @@ Generate a complete topical authority map with 3 pillars × 3 clusters each, plu
       content_calendar: Array<{ week: number; title: string; type: string; why_now: string }>
     }>(raw)
 
-    if (!data?.pillars?.length) throw new Error('Could not generate topical map. Try a more specific niche.')
+    // AuthError, not a bare Error: apiError matches none of its branches on a plain Error and
+    // falls through to a generic 500, discarding this message — so the one piece of advice that
+    // would actually help ("try a more specific niche") never reached the user. Still lands in
+    // the catch below, so the quota refund fires exactly as before.
+    if (!data?.pillars?.length) {
+      throw new AuthError(422, 'Could not generate a topical map for that niche. Try a more specific one.')
+    }
 
     const pillars = data.pillars.slice(0, 3)
     let totalTopics = 0, coveredCount = 0

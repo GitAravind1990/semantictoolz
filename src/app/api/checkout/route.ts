@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { apiError, apiSuccess } from '@/lib/api'
 import { captureServerEvent } from '@/lib/posthog-server'
 import { sanitizeRef } from '@/lib/referral'
+import { AuthError } from '@/lib/auth'
 
 export const runtime = 'nodejs'
 
@@ -63,7 +64,13 @@ export async function POST(req: NextRequest) {
     } as any)
 
     const checkoutUrl = (session as any).checkout_url ?? (session as any).url
-    if (!checkoutUrl) throw new Error('Checkout URL not returned')
+    // Genuinely not the user's fault — Dodo accepted the session and returned no URL — but a
+    // generic 500 tells someone trying to pay nothing about whether retrying is worth it. 502
+    // names it as an upstream problem and says to try again, which here is true and actionable.
+    if (!checkoutUrl) {
+      console.error('[Checkout] Dodo returned a session with no checkout URL', { productId })
+      throw new AuthError(502, 'We could not start checkout just now. Please try again in a moment.')
+    }
 
     await captureServerEvent(clerkId, 'checkout_started', {
       product_id: productId,
