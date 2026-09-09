@@ -531,9 +531,22 @@ export function analyzeHomepage(html: string, finalUrl: string): { findings: SEO
   const schemaTypes = extractSchemaTypes(html)
   const schemaPresent = schemaTypes.length > 0
   if (!schemaPresent) {
+    // The advice has to match the kind of site, or it discredits the whole report. This
+    // previously told every schema-less site to add LocalBusiness "with address, phone,
+    // opening hours, and geo coordinates" — measured on linear.app, a B2B SaaS with no
+    // premises, which is exactly the kind of recommendation that makes an audit look
+    // automated and wrong to the person reading it.
+    //
+    // Same detection auto-checks.ts already uses for the paid SEO Audit: a tel: link plus
+    // language about visiting a place. That file gets this right; this one did not.
+    const localSignals = /href=["']tel:/i.test(html)
+      && /\b(address|directions|opening hours|hours of operation|visit us|our location)\b/i.test(text)
+
     add('Structured data', 'high', 'No schema markup',
-      'No JSON-LD or microdata, so opening hours, address, and reviews are not exposed to search engines in a readable form.',
-      'Add LocalBusiness schema with address, phone, opening hours, and geo coordinates.')
+      'No JSON-LD or microdata, so nothing about this organisation is exposed to search engines or answer engines in a machine-readable form.',
+      localSignals
+        ? 'Add LocalBusiness schema with address, phone, opening hours and geo coordinates.'
+        : 'Add Organization schema with your name, logo and social profiles, plus WebSite schema. Add LocalBusiness only if you have premises customers visit.')
   }
 
   // Canonical
