@@ -74,15 +74,23 @@ export async function POST(req: NextRequest) {
     const user = await requireAuth('analyse')
     clerkId = user.clerkId
     charged = user.userId
-    const { content, contentUrl } = await req.json()
+    const { content, contentUrl, signals } = await req.json()
 
     if (!content || content.length < 50) {
       throw new AuthError(400, 'Content too short')
     }
 
+    // The markup summary, when the content came from a URL. Sent separately by the client and
+    // assembled here rather than glued onto the content upstream, so the diagnostics never
+    // appear in the user's text box. Length-capped independently of the body: a page with a
+    // long heading outline must not crowd out the prose the other four dimensions are scored on.
+    const signalBlock = typeof signals === 'string' && signals.trim()
+      ? `${signals.slice(0, 3000)}\n\n`
+      : ''
+
     const raw = await callLLM(
       SYSTEM,
-      `Analyse the content below and categorize each issue:\n<content>\n${content.slice(0, 5000)}\n</content>`,
+      `Analyse the content below and categorize each issue:\n<content>\n${signalBlock}${content.slice(0, 5000)}\n</content>`,
       2000,
       'claude-haiku-4-5-20251001'
     )

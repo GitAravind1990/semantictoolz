@@ -6,6 +6,20 @@ import { validateUrl } from '@/lib/ssrf-guard'
 
 export const runtime = 'nodejs'
 
+/** Shared by the body extractor and the signal reader, so both decode identically. */
+function decodeEntities(s: string): string {
+  return s
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code, 10)))
+}
+
 /**
  * Summarises the markup signals before they are stripped.
  *
@@ -26,7 +40,10 @@ function extractPageSignals(html: string, finalUrl: string): string {
   const head = html.slice(0, 200_000)
   const one = (re: RegExp): string | null => {
     const m = head.match(re)
-    return m?.[1]?.trim().replace(/\s+/g, ' ').slice(0, 300) || null
+    // Entities decoded here as well as in the body text. Titles and meta descriptions are full
+    // of &#039; and &amp;, and an undecoded "Beginner&#039;s Guide" is both wrong to read and
+    // wrong to score — the analyser would see mangled text where the page has clean text.
+    return m?.[1] ? decodeEntities(m[1]).trim().replace(/\s+/g, ' ').slice(0, 300) || null : null
   }
 
   const title = one(/<title[^>]*>([\s\S]*?)<\/title>/i)
@@ -44,7 +61,7 @@ function extractPageSignals(html: string, finalUrl: string): string {
   // The heading outline, which carries the document structure that stripping destroys.
   const headings: string[] = []
   for (const m of head.matchAll(/<(h[1-3])[^>]*>([\s\S]*?)<\/\1>/gi)) {
-    const text = (m[2] ?? '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+    const text = decodeEntities((m[2] ?? '').replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim()
     if (text) headings.push(`${m[1].toUpperCase()}: ${text.slice(0, 90)}`)
     if (headings.length >= 15) break
   }
@@ -184,9 +201,15 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Signals prepended to the prose, so the analyser scores the markup dimensions against
-    // what the page actually declares rather than against text those tags were removed from.
-    return apiSuccess({ content: extractPageSignals(html, res.url || url) + text })
+    // Returned as a separate field, not glued onto the content.
+    //
+    // Prepending it put "=== PAGE SIGNALS ===" straight into the user's content box, where it
+    // read as machine output leaking through the UI — and anyone editing the text would have
+    // been editing diagnostics. The analyser needs it; the person does not have to see it.
+    return apiSuccess({
+      content: text,
+      signals: extractPageSignals(html, res.url || url),
+    })
   } catch (e) {
     return apiError(e)
   }

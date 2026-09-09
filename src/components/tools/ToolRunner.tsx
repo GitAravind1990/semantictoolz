@@ -36,7 +36,7 @@ export function ToolRunner({ onResult, initialUrl }: ToolRunnerProps) {
     if (initialUrl) setUrlInput(initialUrl)
   }, [initialUrl])
 
-  const runAnalysis = useCallback(async (contentToAnalyse?: string, contentUrl?: string) => {
+  const runAnalysis = useCallback(async (contentToAnalyse?: string, contentUrl?: string, pageSignals?: string) => {
     if (analyseLoading) return
     const c = contentToAnalyse ?? content
     if (!c || c.length < 50) { setError('Paste some content first'); return }
@@ -45,7 +45,9 @@ export function ToolRunner({ onResult, initialUrl }: ToolRunnerProps) {
       const r = await fetch('/api/analyse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: c, contentUrl }),
+        // signals travels alongside the content rather than inside it, so the markup
+        // dimensions can be scored without the diagnostics appearing in the user's text box.
+        body: JSON.stringify({ content: c, contentUrl, signals: pageSignals }),
       })
       const d = await r.json()
       if (r.status === 429) { setShowUpgradeModal(true); return }
@@ -68,7 +70,7 @@ export function ToolRunner({ onResult, initialUrl }: ToolRunnerProps) {
       const d = await r.json()
       if (!r.ok) throw new Error(d.error)
       setContent(d.content)
-      await runAnalysis(d.content, urlInput.trim())
+      await runAnalysis(d.content, urlInput.trim(), d.signals)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not fetch URL')
     } finally { setFetchLoading(false) }
